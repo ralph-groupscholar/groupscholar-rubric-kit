@@ -4,3 +4,4 @@
 - Created a rubric kit microsite with sections for modules, workflow, and signal library.
 - Designed a bold visual system (Fraunces + Space Grotesk, warm gradients, tactile cards).
 - Added clear CTAs and a rubric snapshot card to convey the tool quickly.
+- Deployed to https://groupscholar-rubric-kit.vercel.app.
