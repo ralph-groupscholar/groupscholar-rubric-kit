@@ -10,3 +10,4 @@
 - Added a template pack section with downloadable artifacts and a facilitator checklist.
 - Linked the new templates area from navigation and hero CTAs.
 - Expanded styling for template cards and checklist panel.
+- Redeployed to https://groupscholar-rubric-kit.vercel.app.
