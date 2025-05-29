@@ -11,3 +11,8 @@
 - Linked the new templates area from navigation and hero CTAs.
 - Expanded styling for template cards and checklist panel.
 - Redeployed to https://groupscholar-rubric-kit.vercel.app.
+
+## Iteration 3
+- Added a calibration studio section with a facilitated agenda and anchor scoring guide.
+- Introduced new layout styling for calibration cards and consensus mapping.
+- Redeployed to https://groupscholar-rubric-kit.vercel.app.
