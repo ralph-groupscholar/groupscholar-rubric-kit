@@ -1,0 +1,10 @@
+{
+  "name": "groupscholar-rubric-kit",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Rubric sprint microsite with feedback capture.",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "pg": "^8.11.5"
+  }
+}

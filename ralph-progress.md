@@ -16,3 +16,13 @@
 - Added a calibration studio section with a facilitated agenda and anchor scoring guide.
 - Introduced new layout styling for calibration cards and consensus mapping.
 - Redeployed to https://groupscholar-rubric-kit.vercel.app.
+
+## Iteration 4
+- Added a feedback loop section with a reviewer pulse form and rubric health prompts.
+- Wired a serverless API endpoint to persist feedback to Postgres with a dedicated table.
+- Added client-side submission handling and refreshed layout styling.
+
+## Iteration 4
+- Wired the feedback form to a Vercel serverless endpoint backed by Postgres.
+- Added payload validation, safe length caps, and table auto-creation for rubric feedback.
+- Documented database setup needs for deployment.
