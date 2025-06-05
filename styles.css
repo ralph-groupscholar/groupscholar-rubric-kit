@@ -561,6 +561,63 @@ main {
   color: rgba(255, 255, 255, 0.75);
 }
 
+.pulse {
+  margin-top: 72px;
+}
+
+.pulse-grid {
+  margin-top: 28px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.pulse-card {
+  background: var(--card);
+  border-radius: 22px;
+  padding: 22px;
+  box-shadow: 0 16px 32px rgba(18, 16, 20, 0.08);
+  display: grid;
+  gap: 16px;
+}
+
+.pulse-metrics {
+  display: grid;
+  gap: 12px;
+}
+
+.metric-label {
+  display: block;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: rgba(18, 16, 20, 0.5);
+  margin-bottom: 6px;
+}
+
+.pulse-list {
+  list-style: none;
+  display: grid;
+  gap: 10px;
+  padding: 0;
+}
+
+.pulse-list li {
+  background: rgba(18, 16, 20, 0.06);
+  border-radius: 14px;
+  padding: 10px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+}
+
+.pulse-note {
+  margin-top: 18px;
+  font-size: 13px;
+  color: rgba(18, 16, 20, 0.6);
+}
+
 .footer {
   padding: 40px clamp(24px, 6vw, 96px) 64px;
   background: var(--ink);

@@ -24,6 +24,7 @@
           <a href="#templates">Templates</a>
           <a href="#signals">Signals</a>
           <a href="#feedback">Feedback</a>
+          <a href="#pulse">Pulse</a>
         </nav>
       </div>
       <div class="hero-grid">
@@ -364,6 +365,45 @@
             <p class="form-status" id="feedback-status" role="status" aria-live="polite"></p>
           </form>
         </div>
+      </section>
+
+      <section id="pulse" class="section pulse">
+        <div class="section-title">
+          <h2>Feedback pulse</h2>
+          <p>Live snapshot from reviewer submissions.</p>
+        </div>
+        <div class="pulse-grid">
+          <article class="pulse-card">
+            <p class="eyebrow">Totals</p>
+            <div class="pulse-metrics">
+              <div>
+                <span class="metric-label">Total submissions</span>
+                <strong id="pulse-total">—</strong>
+              </div>
+              <div>
+                <span class="metric-label">Follow-up ok</span>
+                <strong id="pulse-followup">—</strong>
+              </div>
+              <div>
+                <span class="metric-label">Last submission</span>
+                <strong id="pulse-last">—</strong>
+              </div>
+            </div>
+          </article>
+          <article class="pulse-card">
+            <p class="eyebrow">Cycle stages</p>
+            <ul class="pulse-list" id="pulse-stages">
+              <li>Loading...</li>
+            </ul>
+          </article>
+          <article class="pulse-card">
+            <p class="eyebrow">Focus areas</p>
+            <ul class="pulse-list" id="pulse-focus">
+              <li>Loading...</li>
+            </ul>
+          </article>
+        </div>
+        <p class="pulse-note" id="pulse-status">Syncing with database.</p>
       </section>
     </main>
 

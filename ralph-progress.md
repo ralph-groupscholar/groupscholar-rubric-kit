@@ -26,3 +26,4 @@
 - Wired the feedback form to a Vercel serverless endpoint backed by Postgres.
 - Added payload validation, safe length caps, and table auto-creation for rubric feedback.
 - Documented database setup needs for deployment.
+- Redeployed to https://groupscholar-rubric-kit.vercel.app.
