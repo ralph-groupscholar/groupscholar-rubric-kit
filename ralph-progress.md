@@ -27,6 +27,7 @@
 - Added payload validation, safe length caps, and table auto-creation for rubric feedback.
 - Documented database setup needs for deployment.
 - Redeployed to https://groupscholar-rubric-kit.vercel.app.
+- Redeployed to https://groupscholar-rubric-kit.vercel.app.
 
 ## Iteration 5
 - Added a feedback pulse dashboard with live totals, stage distribution, and focus-area counts.
