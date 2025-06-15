@@ -33,3 +33,9 @@
 - Added a feedback pulse dashboard with live totals, stage distribution, and focus-area counts.
 - Built a feedback summary API endpoint to read aggregated metrics from Postgres.
 - Wired client-side rendering and styling for the new pulse section.
+- Redeployed to https://groupscholar-rubric-kit.vercel.app.
+
+## Iteration 6
+- Added a recent feedback API endpoint to surface the latest reviewer notes.
+- Wired the pulse dashboard to render recent notes with tags and timestamps.
+- Added client-side rendering helpers to format and truncate recent feedback.
