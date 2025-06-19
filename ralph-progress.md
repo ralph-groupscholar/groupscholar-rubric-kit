@@ -39,3 +39,8 @@
 - Added a recent feedback API endpoint to surface the latest reviewer notes.
 - Wired the pulse dashboard to render recent notes with tags and timestamps.
 - Added client-side rendering helpers to format and truncate recent feedback.
+
+## Iteration 6
+- Added a recent notes panel to the feedback pulse dashboard for quick review context.
+- Built a feedback-recent API endpoint to return the latest five submissions with anonymized labels.
+- Improved client-side rendering to avoid HTML injection and show role/stage/focus tags.

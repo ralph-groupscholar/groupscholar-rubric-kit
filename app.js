@@ -6,6 +6,10 @@ const pulseLast = document.getElementById("pulse-last");
 const pulseStages = document.getElementById("pulse-stages");
 const pulseFocus = document.getElementById("pulse-focus");
 const pulseStatus = document.getElementById("pulse-status");
+const pulseRecent = document.getElementById("pulse-recent");
+const pulseRecentStatus = document.getElementById("pulse-recent-status");
+const pulseRecent = document.getElementById("pulse-recent");
+const pulseRecentStatus = document.getElementById("pulse-recent-status");
 
 if (form) {
   form.addEventListener("submit", async (event) => {
@@ -67,6 +71,11 @@ function formatDate(value) {
   });
 }
 
+function truncate(value, max) {
+  if (!value) return "";
+  return value.length > max ? `${value.slice(0, max)}…` : value;
+}
+
 function renderList(el, data, map) {
   if (!el) return;
   el.innerHTML = "";
@@ -85,6 +94,83 @@ function renderList(el, data, map) {
       item.innerHTML = `<span>${label}</span><strong>${value}</strong>`;
       el.appendChild(item);
     });
+}
+
+function renderRecent(el, entries) {
+  if (!el) return;
+  el.innerHTML = "";
+  if (!entries || !entries.length) {
+    const item = document.createElement("li");
+    item.textContent = "No recent feedback yet.";
+    el.appendChild(item);
+    return;
+  }
+
+  entries.forEach((entry) => {
+    const item = document.createElement("li");
+    const meta = document.createElement("div");
+    meta.className = "recent-meta";
+    const reviewer = document.createElement("span");
+    reviewer.textContent = entry.reviewer || "Reviewer";
+    const created = document.createElement("span");
+    created.textContent = formatDate(entry.created_at);
+    meta.append(reviewer, created);
+
+    const note = document.createElement("p");
+    note.textContent = entry.notes || "No notes provided.";
+
+    const tags = document.createElement("div");
+    tags.className = "recent-tags";
+
+    if (entry.role) {
+      const roleTag = document.createElement("span");
+      roleTag.textContent = entry.role;
+      tags.appendChild(roleTag);
+    }
+
+    const stageTag = document.createElement("span");
+    stageTag.textContent = labelMaps.stage[entry.stage] || entry.stage;
+    const focusTag = document.createElement("span");
+    focusTag.textContent = labelMaps.focus[entry.focus] || entry.focus;
+    tags.append(stageTag, focusTag);
+
+    item.append(meta, note, tags);
+    el.appendChild(item);
+  });
+}
+
+function renderRecentFeedback(items = []) {
+  if (!pulseRecent) return;
+  pulseRecent.innerHTML = "";
+  if (!items.length) {
+    const item = document.createElement("li");
+    item.textContent = "No feedback yet.";
+    pulseRecent.appendChild(item);
+    return;
+  }
+
+  items.forEach((entry) => {
+    const item = document.createElement("li");
+    const meta = document.createElement("div");
+    meta.className = "recent-meta";
+    meta.innerHTML = `<span>${entry.name || "Anonymous"}</span><span>${formatDate(
+      entry.created_at
+    )}</span>`;
+
+    const tags = document.createElement("div");
+    tags.className = "recent-tags";
+    tags.innerHTML = `<span>${labelMaps.stage[entry.stage] || entry.stage}</span>
+      <span>${labelMaps.focus[entry.focus] || entry.focus}</span>
+      <span>${entry.role || "Reviewer"}</span>`;
+
+    const notes = document.createElement("p");
+    notes.textContent = truncate(entry.notes, 180);
+
+    item.appendChild(meta);
+    item.appendChild(tags);
+    item.appendChild(notes);
+    pulseRecent.appendChild(item);
+  });
 }
 
 async function loadPulseSummary() {
@@ -111,4 +197,42 @@ async function loadPulseSummary() {
   }
 }
 
+async function loadRecentFeedback() {
+  if (!pulseRecentStatus) return;
+  pulseRecentStatus.textContent = "Syncing latest notes...";
+  try {
+    const response = await fetch("/api/feedback-recent");
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(result.error || "Unable to load recent notes.");
+    }
+    renderRecent(pulseRecent, result.entries || []);
+    pulseRecentStatus.textContent = "Latest notes loaded.";
+  } catch (error) {
+    pulseRecentStatus.textContent =
+      error.message || "Could not load recent notes.";
+  }
+}
+
+async function loadRecentFeedback() {
+  if (!pulseRecentStatus) return;
+  pulseRecentStatus.textContent = "Pulling most recent feedback.";
+  try {
+    const response = await fetch("/api/feedback-recent");
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(result.error || "Unable to load recent feedback.");
+    }
+    renderRecentFeedback(result.items || []);
+    pulseRecentStatus.textContent = "Showing the latest reviewer notes.";
+  } catch (error) {
+    if (pulseRecentStatus) {
+      pulseRecentStatus.textContent =
+        error.message || "Could not load recent feedback.";
+    }
+  }
+}
+
 loadPulseSummary();
+loadRecentFeedback();
+loadRecentFeedback();
