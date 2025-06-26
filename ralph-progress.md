@@ -44,3 +44,4 @@
 - Added a recent notes panel to the feedback pulse dashboard for quick review context.
 - Built a feedback-recent API endpoint to return the latest five submissions with anonymized labels.
 - Improved client-side rendering to avoid HTML injection and show role/stage/focus tags.
+- Attempted `vercel --prod` deploy but hit the daily deployment limit.
