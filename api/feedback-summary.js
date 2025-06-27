@@ -69,6 +69,14 @@ module.exports = async function handler(req, res) {
       `
     );
 
+    const roleResult = await client.query(
+      `
+        SELECT role AS key, COUNT(*)::int AS count
+        FROM rubric_kit_feedback
+        GROUP BY role
+      `
+    );
+
     const totals = totalsResult.rows[0] || {
       total: 0,
       followup: 0,
@@ -81,6 +89,7 @@ module.exports = async function handler(req, res) {
       last_submission: totals.last_submission,
       stages: mapCounts(stageResult.rows || []),
       focus: mapCounts(focusResult.rows || []),
+      roles: mapCounts(roleResult.rows || []),
     });
   } catch (error) {
     res.status(500).json({ error: "Unable to load feedback summary" });

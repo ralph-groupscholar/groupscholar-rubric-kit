@@ -5,9 +5,12 @@ const pulseFollowup = document.getElementById("pulse-followup");
 const pulseLast = document.getElementById("pulse-last");
 const pulseStages = document.getElementById("pulse-stages");
 const pulseFocus = document.getElementById("pulse-focus");
+const pulseRoles = document.getElementById("pulse-roles");
 const pulseStatus = document.getElementById("pulse-status");
 const pulseRecent = document.getElementById("pulse-recent");
 const pulseRecentStatus = document.getElementById("pulse-recent-status");
+const pulseFollowupList = document.getElementById("pulse-followup-list");
+const pulseFollowupStatus = document.getElementById("pulse-followup-status");
 
 if (form) {
   form.addEventListener("submit", async (event) => {
@@ -69,7 +72,7 @@ function formatDate(value) {
   });
 }
 
-function renderList(el, data, map) {
+function renderList(el, data, map = {}) {
   if (!el) return;
   el.innerHTML = "";
   const entries = Object.entries(data || {});
@@ -132,6 +135,60 @@ function renderRecent(el, entries) {
   });
 }
 
+function renderFollowups(el, entries) {
+  if (!el) return;
+  el.innerHTML = "";
+  if (!entries || !entries.length) {
+    const item = document.createElement("li");
+    item.textContent = "No follow-up requests yet.";
+    el.appendChild(item);
+    return;
+  }
+
+  entries.forEach((entry) => {
+    const item = document.createElement("li");
+
+    const meta = document.createElement("div");
+    meta.className = "followup-meta";
+    const reviewer = document.createElement("span");
+    reviewer.textContent = entry.name || "Reviewer";
+    const created = document.createElement("span");
+    created.textContent = formatDate(entry.created_at);
+    meta.append(reviewer, created);
+
+    const email = document.createElement("div");
+    email.className = "followup-email";
+    email.textContent = entry.email || "Email not provided.";
+
+    const note = document.createElement("p");
+    note.textContent = entry.notes || "No notes provided.";
+
+    const tags = document.createElement("div");
+    tags.className = "recent-tags";
+
+    if (entry.role) {
+      const roleTag = document.createElement("span");
+      roleTag.textContent = entry.role;
+      tags.appendChild(roleTag);
+    }
+
+    if (entry.stage) {
+      const stageTag = document.createElement("span");
+      stageTag.textContent = labelMaps.stage[entry.stage] || entry.stage;
+      tags.appendChild(stageTag);
+    }
+
+    if (entry.focus) {
+      const focusTag = document.createElement("span");
+      focusTag.textContent = labelMaps.focus[entry.focus] || entry.focus;
+      tags.appendChild(focusTag);
+    }
+
+    item.append(meta, email, note, tags);
+    el.appendChild(item);
+  });
+}
+
 async function loadPulseSummary() {
   if (!pulseStatus) return;
   pulseStatus.textContent = "Syncing with database...";
@@ -148,6 +205,7 @@ async function loadPulseSummary() {
 
     renderList(pulseStages, result.stages, labelMaps.stage);
     renderList(pulseFocus, result.focus, labelMaps.focus);
+    renderList(pulseRoles, result.roles, {});
     pulseStatus.textContent = "Updated from rubric feedback database.";
   } catch (error) {
     if (pulseStatus) {
@@ -165,7 +223,7 @@ async function loadRecentFeedback() {
     if (!response.ok) {
       throw new Error(result.error || "Unable to load recent notes.");
     }
-    renderRecent(pulseRecent, result.entries || []);
+    renderRecent(pulseRecent, result.entries || result.items || []);
     pulseRecentStatus.textContent = "Latest notes loaded.";
   } catch (error) {
     pulseRecentStatus.textContent =
@@ -173,5 +231,26 @@ async function loadRecentFeedback() {
   }
 }
 
+async function loadFollowups() {
+  if (!pulseFollowupStatus) return;
+  pulseFollowupStatus.textContent = "Loading follow-up requests...";
+  try {
+    const response = await fetch("/api/feedback-followup");
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(result.error || "Unable to load follow-up list.");
+    }
+
+    renderFollowups(pulseFollowupList, result.entries || []);
+    pulseFollowupStatus.textContent = "Follow-up queue ready.";
+  } catch (error) {
+    if (pulseFollowupStatus) {
+      pulseFollowupStatus.textContent =
+        error.message || "Could not load follow-up list.";
+    }
+  }
+}
+
 loadPulseSummary();
 loadRecentFeedback();
+loadFollowups();

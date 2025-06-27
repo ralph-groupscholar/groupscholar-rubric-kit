@@ -45,3 +45,8 @@
 - Built a feedback-recent API endpoint to return the latest five submissions with anonymized labels.
 - Improved client-side rendering to avoid HTML injection and show role/stage/focus tags.
 - Attempted `vercel --prod` deploy but hit the daily deployment limit.
+
+## Iteration 15
+- Added a reviewer roles breakdown to the feedback pulse dashboard.
+- Extended the summary API to aggregate role counts alongside stages and focus.
+- Wired the new roles list into the pulse UI.
