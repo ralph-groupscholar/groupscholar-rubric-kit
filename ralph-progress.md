@@ -56,3 +56,10 @@
 - Added a reviewer roles breakdown to the feedback pulse dashboard.
 - Extended the summary API to aggregate role counts alongside stages and focus.
 - Wired the new roles list into the pulse UI.
+
+## Iteration 16
+- Deduplicated hotspot rendering/loading logic to avoid double fetches and repeated UI handlers.
+- Restored a single pair of hotspot DOM bindings after cleanup.
+
+## Iteration 16
+- Fixed hotspot pulse wiring by defining the missing DOM hooks for the hotspot list and status elements.

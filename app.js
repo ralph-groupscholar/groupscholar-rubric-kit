@@ -11,6 +11,16 @@ const pulseRecent = document.getElementById("pulse-recent");
 const pulseRecentStatus = document.getElementById("pulse-recent-status");
 const pulseFollowupList = document.getElementById("pulse-followup-list");
 const pulseFollowupStatus = document.getElementById("pulse-followup-status");
+const pulseHotspots = document.getElementById("pulse-hotspots");
+const pulseHotspotsStatus = document.getElementById("pulse-hotspots-status");
+const pulseTrendTotal = document.getElementById("pulse-trend-total");
+const pulseTrendPeak = document.getElementById("pulse-trend-peak");
+const pulseTrendChart = document.getElementById("pulse-trend-chart");
+const pulseTrendStatus = document.getElementById("pulse-trend-status");
+const pulseTrendFocus = document.getElementById("pulse-trend-focus");
+const pulseTrendStage = document.getElementById("pulse-trend-stage");
+const pulseHotspots = document.getElementById("pulse-hotspots");
+const pulseHotspotsStatus = document.getElementById("pulse-hotspots-status");
 
 if (form) {
   form.addEventListener("submit", async (event) => {
@@ -70,6 +80,22 @@ function formatDate(value) {
     day: "numeric",
     year: "numeric",
   });
+}
+
+function formatDay(value) {
+  if (!value) return "—";
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return "—";
+  return parsed.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+  });
+}
+
+function toDateKey(value) {
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return parsed.toISOString().split("T")[0];
 }
 
 function renderList(el, data, map = {}) {
@@ -186,6 +212,66 @@ function renderFollowups(el, entries) {
 
     item.append(meta, email, note, tags);
     el.appendChild(item);
+    });
+}
+
+function renderTrendChart(el, entries) {
+  if (!el) return;
+  el.innerHTML = "";
+  if (!entries || !entries.length) {
+    const item = document.createElement("li");
+    item.textContent = "No recent submissions yet.";
+    el.appendChild(item);
+    return;
+  }
+
+  const maxValue = Math.max(...entries.map((entry) => entry.count || 0), 1);
+
+  entries.forEach((entry) => {
+    const item = document.createElement("li");
+    const label = document.createElement("span");
+    label.className = "trend-label";
+    label.textContent = formatDay(entry.day);
+
+    const bar = document.createElement("div");
+    bar.className = "trend-bar";
+    const fill = document.createElement("span");
+    fill.style.width = `${Math.round((entry.count / maxValue) * 100)}%`;
+    bar.appendChild(fill);
+
+    const count = document.createElement("span");
+    count.className = "trend-count";
+    count.textContent = entry.count ?? 0;
+
+    item.append(label, bar, count);
+    el.appendChild(item);
+  });
+}
+
+function renderHotspots(el, entries) {
+  if (!el) return;
+  el.innerHTML = "";
+  if (!entries || !entries.length) {
+    const item = document.createElement("li");
+    item.textContent = "No hotspots yet.";
+    el.appendChild(item);
+    return;
+  }
+
+  entries.forEach((entry) => {
+    const item = document.createElement("li");
+    const label = document.createElement("div");
+    label.className = "hotspot-label";
+    const stage = labelMaps.stage[entry.stage] || entry.stage || "Unknown stage";
+    const focus = labelMaps.focus[entry.focus] || entry.focus || "Unknown focus";
+    label.textContent = `${stage} · ${focus}`;
+
+    const count = document.createElement("strong");
+    count.className = "hotspot-count";
+    count.textContent = entry.count ?? "0";
+
+    item.append(label, count);
+    el.appendChild(item);
   });
 }
 
@@ -211,6 +297,60 @@ async function loadPulseSummary() {
     if (pulseStatus) {
       pulseStatus.textContent = error.message || "Could not load pulse data.";
     }
+  }
+}
+
+async function loadTrendPulse() {
+  if (!pulseTrendStatus) return;
+  pulseTrendStatus.textContent = "Loading trendline...";
+  try {
+    const response = await fetch("/api/feedback-trends");
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(result.error || "Unable to load trend data.");
+    }
+
+    const series = Array.isArray(result.series) ? result.series : [];
+    const dayMap = new Map();
+    series.forEach((entry) => {
+      const key = toDateKey(entry.day);
+      if (key) dayMap.set(key, Number(entry.count) || 0);
+    });
+
+    const today = new Date();
+    const trendEntries = [];
+    for (let i = 13; i >= 0; i -= 1) {
+      const date = new Date(today);
+      date.setDate(today.getDate() - i);
+      const key = toDateKey(date);
+      trendEntries.push({
+        day: date,
+        count: dayMap.get(key) || 0,
+      });
+    }
+
+    const totalRecent = trendEntries.reduce((acc, entry) => acc + entry.count, 0);
+    if (pulseTrendTotal) pulseTrendTotal.textContent = totalRecent;
+
+    const peakEntry =
+      trendEntries.reduce(
+        (best, entry) => (entry.count > best.count ? entry : best),
+        { count: -1, day: null }
+      ) || {};
+    if (pulseTrendPeak) {
+      pulseTrendPeak.textContent =
+        peakEntry.day && peakEntry.count >= 0
+          ? `${formatDay(peakEntry.day)} (${peakEntry.count})`
+          : "—";
+    }
+
+    renderTrendChart(pulseTrendChart, trendEntries);
+    renderList(pulseTrendFocus, result.focus || {}, labelMaps.focus);
+    renderList(pulseTrendStage, result.stages || {}, labelMaps.stage);
+    pulseTrendStatus.textContent = "Trendline updated.";
+  } catch (error) {
+    pulseTrendStatus.textContent =
+      error.message || "Could not load trendline.";
   }
 }
 
@@ -251,6 +391,27 @@ async function loadFollowups() {
   }
 }
 
+async function loadHotspots() {
+  if (!pulseHotspotsStatus) return;
+  pulseHotspotsStatus.textContent = "Scanning hotspots...";
+  try {
+    const response = await fetch("/api/feedback-hotspots");
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(result.error || "Unable to load hotspots.");
+    }
+    renderHotspots(pulseHotspots, result.entries || []);
+    pulseHotspotsStatus.textContent = "Hotspot signals updated.";
+  } catch (error) {
+    if (pulseHotspotsStatus) {
+      pulseHotspotsStatus.textContent =
+        error.message || "Could not load hotspots.";
+    }
+  }
+}
+
 loadPulseSummary();
+loadTrendPulse();
 loadRecentFeedback();
 loadFollowups();
+loadHotspots();
