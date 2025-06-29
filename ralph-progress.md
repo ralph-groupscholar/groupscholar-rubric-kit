@@ -46,6 +46,12 @@
 - Improved client-side rendering to avoid HTML injection and show role/stage/focus tags.
 - Attempted `vercel --prod` deploy but hit the daily deployment limit.
 
+## Iteration 7
+- Replaced the unused reviewer roles card with a follow-up queue driven by the feedback database.
+- Added a follow-up API endpoint to return contact-approved submissions with emails.
+- Fixed the recent feedback API response shape and hardened the client to accept legacy payloads.
+- Extended pulse styles to support the new follow-up list layout.
+
 ## Iteration 15
 - Added a reviewer roles breakdown to the feedback pulse dashboard.
 - Extended the summary API to aggregate role counts alongside stages and focus.

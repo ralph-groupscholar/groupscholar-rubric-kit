@@ -38,10 +38,11 @@ module.exports = async function handler(req, res) {
 
     const result = await client.query(
       `
-        SELECT name, role, stage, focus, notes, created_at
+        SELECT name, role, email, stage, focus, notes, created_at
         FROM rubric_kit_feedback
+        WHERE contact_ok = TRUE AND email IS NOT NULL AND email <> ''
         ORDER BY created_at DESC
-        LIMIT 5
+        LIMIT 8
       `
     );
 
@@ -49,7 +50,7 @@ module.exports = async function handler(req, res) {
       entries: result.rows || [],
     });
   } catch (error) {
-    res.status(500).json({ error: "Unable to load recent feedback" });
+    res.status(500).json({ error: "Unable to load follow-up queue" });
   } finally {
     await client.end().catch(() => null);
   }
