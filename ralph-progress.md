@@ -63,3 +63,9 @@
 
 ## Iteration 16
 - Fixed hotspot pulse wiring by defining the missing DOM hooks for the hotspot list and status elements.
+
+## Iteration 17
+- Added a calibration action board with a submission form, summary metrics, and prioritized action list.
+- Built new Postgres-backed API endpoints for calibration actions plus status/priority summaries.
+- Seeded production with realistic calibration action items and refreshed styling for the new section.
+- Fixed duplicate pulse element bindings in the client script.

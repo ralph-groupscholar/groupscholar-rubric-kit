@@ -19,8 +19,15 @@ const pulseTrendChart = document.getElementById("pulse-trend-chart");
 const pulseTrendStatus = document.getElementById("pulse-trend-status");
 const pulseTrendFocus = document.getElementById("pulse-trend-focus");
 const pulseTrendStage = document.getElementById("pulse-trend-stage");
-const pulseHotspots = document.getElementById("pulse-hotspots");
-const pulseHotspotsStatus = document.getElementById("pulse-hotspots-status");
+const actionForm = document.getElementById("action-form");
+const actionStatus = document.getElementById("action-status");
+const actionList = document.getElementById("action-list");
+const actionSummaryStatus = document.getElementById("action-summary-status");
+const actionTotal = document.getElementById("action-total");
+const actionDueSoon = document.getElementById("action-due-soon");
+const actionLast = document.getElementById("action-last");
+const actionStatuses = document.getElementById("action-statuses");
+const actionPriorities = document.getElementById("action-priorities");
 
 if (form) {
   form.addEventListener("submit", async (event) => {
@@ -55,6 +62,44 @@ if (form) {
   });
 }
 
+if (actionForm) {
+  actionForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (actionStatus) {
+      actionStatus.textContent = "Saving action item...";
+    }
+
+    const formData = new FormData(actionForm);
+    const payload = Object.fromEntries(formData.entries());
+
+    try {
+      const response = await fetch("/api/calibration-action", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result.error || "Request failed");
+      }
+
+      actionForm.reset();
+      if (actionStatus) {
+        actionStatus.textContent = "Action saved. Team can track it below.";
+      }
+      loadActionSummary();
+      loadActions();
+    } catch (error) {
+      if (actionStatus) {
+        actionStatus.textContent = error.message || "Could not save action.";
+      }
+    }
+  });
+}
+
 const labelMaps = {
   stage: {
     prep: "Prep & onboarding",
@@ -68,6 +113,20 @@ const labelMaps = {
     evidence: "Evidence gaps",
     calibration: "Calibration drift",
     workflow: "Workflow friction",
+  },
+};
+
+const actionLabels = {
+  status: {
+    open: "Open",
+    in_progress: "In progress",
+    blocked: "Blocked",
+    done: "Done",
+  },
+  priority: {
+    high: "High priority",
+    medium: "Medium priority",
+    low: "Low priority",
   },
 };
 
@@ -212,7 +271,7 @@ function renderFollowups(el, entries) {
 
     item.append(meta, email, note, tags);
     el.appendChild(item);
-    });
+  });
 }
 
 function renderTrendChart(el, entries) {
@@ -275,6 +334,55 @@ function renderHotspots(el, entries) {
   });
 }
 
+function renderActions(el, entries) {
+  if (!el) return;
+  el.innerHTML = "";
+  if (!entries || !entries.length) {
+    const item = document.createElement("li");
+    item.textContent = "No action items yet.";
+    el.appendChild(item);
+    return;
+  }
+
+  entries.forEach((entry) => {
+    const item = document.createElement("li");
+    const header = document.createElement("div");
+    header.className = "action-header";
+
+    const title = document.createElement("div");
+    title.className = "action-title";
+    title.textContent = entry.title || "Calibration action";
+
+    const status = document.createElement("span");
+    status.className = `action-status-chip status-${entry.status || "open"}`;
+    status.textContent =
+      actionLabels.status[entry.status] || entry.status || "Open";
+
+    header.append(title, status);
+
+    const meta = document.createElement("div");
+    meta.className = "action-meta";
+    const owner = document.createElement("span");
+    owner.textContent = entry.owner ? `Owner: ${entry.owner}` : "Owner TBD";
+    const due = document.createElement("span");
+    due.textContent = entry.due_date
+      ? `Due ${formatDate(entry.due_date)}`
+      : "No due date";
+    meta.append(owner, due);
+
+    const detail = document.createElement("p");
+    detail.textContent = entry.notes || "No notes attached yet.";
+
+    const priority = document.createElement("span");
+    priority.className = `action-priority priority-${entry.priority || "medium"}`;
+    priority.textContent =
+      actionLabels.priority[entry.priority] || entry.priority || "Medium";
+
+    item.append(header, meta, detail, priority);
+    el.appendChild(item);
+  });
+}
+
 async function loadPulseSummary() {
   if (!pulseStatus) return;
   pulseStatus.textContent = "Syncing with database...";
@@ -296,6 +404,48 @@ async function loadPulseSummary() {
   } catch (error) {
     if (pulseStatus) {
       pulseStatus.textContent = error.message || "Could not load pulse data.";
+    }
+  }
+}
+
+async function loadActionSummary() {
+  if (!actionSummaryStatus) return;
+  actionSummaryStatus.textContent = "Loading action summary...";
+  try {
+    const response = await fetch("/api/calibration-action-summary");
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(result.error || "Unable to load action summary.");
+    }
+
+    if (actionTotal) actionTotal.textContent = result.total ?? "0";
+    if (actionDueSoon) actionDueSoon.textContent = result.due_soon ?? "0";
+    if (actionLast) actionLast.textContent = formatDate(result.last_action);
+
+    renderList(actionStatuses, result.statuses, actionLabels.status);
+    renderList(actionPriorities, result.priorities, actionLabels.priority);
+    actionSummaryStatus.textContent = "Action board synced.";
+  } catch (error) {
+    actionSummaryStatus.textContent =
+      error.message || "Could not load action summary.";
+  }
+}
+
+async function loadActions() {
+  if (!actionSummaryStatus) return;
+  try {
+    const response = await fetch("/api/calibration-actions");
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(result.error || "Unable to load actions.");
+    }
+    renderActions(actionList, result.entries || []);
+  } catch (error) {
+    if (actionList) {
+      actionList.innerHTML = "";
+      const item = document.createElement("li");
+      item.textContent = error.message || "Could not load actions.";
+      actionList.appendChild(item);
     }
   }
 }
@@ -415,3 +565,5 @@ loadTrendPulse();
 loadRecentFeedback();
 loadFollowups();
 loadHotspots();
+loadActionSummary();
+loadActions();

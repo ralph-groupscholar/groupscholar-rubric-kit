@@ -476,6 +476,137 @@ main {
   font-size: 14px;
 }
 
+.actions-grid {
+  margin-top: 28px;
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: 24px;
+}
+
+.action-form {
+  background: var(--ink);
+  color: #fff;
+  border-radius: 24px;
+  padding: 24px;
+  display: grid;
+  gap: 16px;
+}
+
+.actions-board {
+  background: var(--card);
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: 0 16px 32px rgba(18, 16, 20, 0.08);
+  display: grid;
+  gap: 18px;
+}
+
+.actions-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px;
+}
+
+.actions-splits {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.action-list {
+  list-style: none;
+  display: grid;
+  gap: 12px;
+  padding: 0;
+}
+
+.action-list li {
+  background: rgba(18, 16, 20, 0.06);
+  border-radius: 16px;
+  padding: 14px 16px;
+  display: grid;
+  gap: 10px;
+  font-size: 14px;
+}
+
+.action-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.action-title {
+  font-weight: 600;
+}
+
+.action-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(18, 16, 20, 0.55);
+}
+
+.action-priority {
+  align-self: flex-start;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(18, 16, 20, 0.12);
+}
+
+.action-status-chip {
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.status-open {
+  background: rgba(238, 111, 79, 0.2);
+  color: #b73c21;
+}
+
+.status-in_progress {
+  background: rgba(40, 124, 138, 0.2);
+  color: #1c5b65;
+}
+
+.status-blocked {
+  background: rgba(18, 16, 20, 0.2);
+  color: #3d3945;
+}
+
+.status-done {
+  background: rgba(90, 165, 120, 0.25);
+  color: #2f6b4a;
+}
+
+.priority-high {
+  background: rgba(238, 111, 79, 0.22);
+  color: #b73c21;
+}
+
+.priority-medium {
+  background: rgba(248, 184, 75, 0.3);
+  color: #8b5a12;
+}
+
+.priority-low {
+  background: rgba(40, 124, 138, 0.2);
+  color: #1c5b65;
+}
+
+.actions-status {
+  margin: 0;
+  font-size: 12px;
+  color: rgba(18, 16, 20, 0.55);
+}
+
 .feedback {
   margin-top: 72px;
 }
@@ -579,6 +710,80 @@ main {
   box-shadow: 0 16px 32px rgba(18, 16, 20, 0.08);
   display: grid;
   gap: 16px;
+}
+
+.pulse-trend {
+  grid-column: span 2;
+}
+
+.trend-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.trend-chart {
+  list-style: none;
+  display: grid;
+  gap: 10px;
+  padding: 0;
+}
+
+.trend-chart li {
+  display: grid;
+  grid-template-columns: minmax(60px, 80px) 1fr auto;
+  gap: 12px;
+  align-items: center;
+  font-size: 13px;
+}
+
+.trend-label {
+  font-weight: 600;
+  color: rgba(18, 16, 20, 0.7);
+}
+
+.trend-bar {
+  height: 10px;
+  background: rgba(18, 16, 20, 0.08);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.trend-bar span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--teal), var(--sun));
+  border-radius: inherit;
+}
+
+.trend-count {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.trend-splits {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px;
+}
+
+.trend-list {
+  list-style: none;
+  display: grid;
+  gap: 8px;
+  padding: 0;
+  margin-top: 8px;
+}
+
+.trend-list li {
+  background: rgba(18, 16, 20, 0.06);
+  border-radius: 12px;
+  padding: 8px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
 }
 
 .pulse-metrics {
@@ -704,10 +909,33 @@ main {
   color: rgba(18, 16, 20, 0.55);
 }
 
+.pulse-hotspots-status {
+  margin: 0;
+  font-size: 12px;
+  color: rgba(18, 16, 20, 0.55);
+}
+
+.hotspot-label {
+  font-size: 13px;
+  color: rgba(18, 16, 20, 0.7);
+}
+
+.pulse-hotspots-status {
+  margin: 0;
+  font-size: 12px;
+  color: rgba(18, 16, 20, 0.55);
+}
+
 .pulse-note {
   margin-top: 18px;
   font-size: 13px;
   color: rgba(18, 16, 20, 0.6);
+}
+
+.pulse-trend-status {
+  margin: 0;
+  font-size: 12px;
+  color: rgba(18, 16, 20, 0.55);
 }
 
 .footer {
@@ -770,7 +998,15 @@ main {
     grid-template-columns: 1fr;
   }
 
+  .actions-grid {
+    grid-template-columns: 1fr;
+  }
+
   .pulse-recent {
+    grid-column: auto;
+  }
+
+  .pulse-trend {
     grid-column: auto;
   }
 }

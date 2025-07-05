@@ -21,6 +21,7 @@
           <a href="#rubrics">Rubrics</a>
           <a href="#workflow">Workflow</a>
           <a href="#calibration">Calibration</a>
+          <a href="#actions">Actions</a>
           <a href="#templates">Templates</a>
           <a href="#signals">Signals</a>
           <a href="#feedback">Feedback</a>
@@ -227,6 +228,107 @@
         </div>
       </section>
 
+      <section id="actions" class="section alt actions">
+        <div class="section-title">
+          <h2>Calibration action board</h2>
+          <p>Assign follow-through items so rubric shifts become real.</p>
+        </div>
+        <div class="actions-grid">
+          <form class="action-form" id="action-form">
+            <div class="field">
+              <label for="action-title">Action title</label>
+              <input
+                id="action-title"
+                name="title"
+                type="text"
+                placeholder="e.g., Define score-4 anchors for STEM rubric"
+                required
+              />
+            </div>
+            <div class="field">
+              <label for="action-owner">Owner</label>
+              <input
+                id="action-owner"
+                name="owner"
+                type="text"
+                placeholder="Reviewer or staff lead"
+                required
+              />
+            </div>
+            <div class="field">
+              <label for="action-priority">Priority</label>
+              <select id="action-priority" name="priority" required>
+                <option value="">Select one</option>
+                <option value="high">High priority</option>
+                <option value="medium">Medium priority</option>
+                <option value="low">Low priority</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="action-status-select">Status</label>
+              <select id="action-status-select" name="status" required>
+                <option value="">Select one</option>
+                <option value="open">Open</option>
+                <option value="in_progress">In progress</option>
+                <option value="blocked">Blocked</option>
+                <option value="done">Done</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="action-due">Due date (optional)</label>
+              <input id="action-due" name="due_date" type="date" />
+            </div>
+            <div class="field">
+              <label for="action-notes">Notes</label>
+              <textarea
+                id="action-notes"
+                name="notes"
+                rows="3"
+                placeholder="Add context, blockers, or evidence needed."
+              ></textarea>
+            </div>
+            <button class="primary" type="submit">Log action item</button>
+            <p class="form-status" id="action-status" role="status" aria-live="polite"></p>
+          </form>
+          <div class="actions-board">
+            <div class="actions-metrics">
+              <div>
+                <span class="metric-label">Total actions</span>
+                <strong id="action-total">—</strong>
+              </div>
+              <div>
+                <span class="metric-label">Due soon (7 days)</span>
+                <strong id="action-due-soon">—</strong>
+              </div>
+              <div>
+                <span class="metric-label">Last update</span>
+                <strong id="action-last">—</strong>
+              </div>
+            </div>
+            <div class="actions-splits">
+              <div>
+                <span class="metric-label">Status mix</span>
+                <ul class="pulse-list" id="action-statuses">
+                  <li>Loading...</li>
+                </ul>
+              </div>
+              <div>
+                <span class="metric-label">Priority mix</span>
+                <ul class="pulse-list" id="action-priorities">
+                  <li>Loading...</li>
+                </ul>
+              </div>
+            </div>
+            <ul class="action-list" id="action-list">
+              <li>Loading...</li>
+            </ul>
+            <p class="actions-status" id="action-summary-status">
+              Loading action board.
+            </p>
+          </div>
+        </div>
+      </section>
+
       <section id="templates" class="section">
         <div class="section-title">
           <h2>Template pack</h2>
@@ -391,6 +493,12 @@
             </div>
           </article>
           <article class="pulse-card">
+            <p class="eyebrow">Reviewer roles</p>
+            <ul class="pulse-list" id="pulse-roles">
+              <li>Loading...</li>
+            </ul>
+          </article>
+          <article class="pulse-card">
             <p class="eyebrow">Cycle stages</p>
             <ul class="pulse-list" id="pulse-stages">
               <li>Loading...</li>
@@ -401,6 +509,48 @@
             <ul class="pulse-list" id="pulse-focus">
               <li>Loading...</li>
             </ul>
+          </article>
+          <article class="pulse-card">
+            <p class="eyebrow">Hotspot signals</p>
+            <ul class="pulse-list" id="pulse-hotspots">
+              <li>Loading...</li>
+            </ul>
+            <p class="pulse-hotspots-status" id="pulse-hotspots-status">
+              Scanning for recurring signals.
+            </p>
+          </article>
+          <article class="pulse-card pulse-trend">
+            <p class="eyebrow">Last 14 days</p>
+            <div class="trend-header">
+              <div>
+                <span class="metric-label">Submissions</span>
+                <strong id="pulse-trend-total">—</strong>
+              </div>
+              <div>
+                <span class="metric-label">Busiest day</span>
+                <strong id="pulse-trend-peak">—</strong>
+              </div>
+            </div>
+            <ul class="trend-chart" id="pulse-trend-chart">
+              <li>Loading...</li>
+            </ul>
+            <div class="trend-splits">
+              <div>
+                <span class="metric-label">Recent focus</span>
+                <ul class="trend-list" id="pulse-trend-focus">
+                  <li>Loading...</li>
+                </ul>
+              </div>
+              <div>
+                <span class="metric-label">Recent stage</span>
+                <ul class="trend-list" id="pulse-trend-stage">
+                  <li>Loading...</li>
+                </ul>
+              </div>
+            </div>
+            <p class="pulse-trend-status" id="pulse-trend-status">
+              Loading trendline.
+            </p>
           </article>
           <article class="pulse-card pulse-followup">
             <p class="eyebrow">Follow-up queue</p>
