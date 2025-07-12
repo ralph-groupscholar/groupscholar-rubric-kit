@@ -21,6 +21,7 @@
           <a href="#rubrics">Rubrics</a>
           <a href="#workflow">Workflow</a>
           <a href="#calibration">Calibration</a>
+          <a href="#drift">Drift</a>
           <a href="#actions">Actions</a>
           <a href="#templates">Templates</a>
           <a href="#signals">Signals</a>
@@ -224,6 +225,191 @@
               </div>
             </div>
             <button class="primary">Run calibration session</button>
+          </div>
+          <div class="drift-card">
+            <div class="drift-head">
+              <div>
+                <p class="eyebrow">Drift Watch</p>
+                <h3>Score variance log</h3>
+              </div>
+              <span class="chip">Live</span>
+            </div>
+            <form class="drift-form" id="drift-form">
+              <div class="field">
+                <label for="drift-criterion">Criterion</label>
+                <input
+                  id="drift-criterion"
+                  name="criterion"
+                  type="text"
+                  placeholder="e.g., Leadership evidence"
+                  required
+                />
+              </div>
+              <div class="field">
+                <label for="drift-spread">Score spread</label>
+                <select id="drift-spread" name="spread" required>
+                  <option value="">Select</option>
+                  <option value="1">1 point</option>
+                  <option value="2">2 points</option>
+                  <option value="3">3 points</option>
+                  <option value="4">4 points</option>
+                  <option value="5">5 points</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="drift-issue">Issue type</label>
+                <select id="drift-issue" name="issue_type" required>
+                  <option value="">Select</option>
+                  <option value="anchors">Anchor alignment</option>
+                  <option value="weighting">Weighting confusion</option>
+                  <option value="evidence">Evidence mismatch</option>
+                  <option value="consistency">Reviewer consistency</option>
+                  <option value="workflow">Workflow friction</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="drift-notes">Notes</label>
+                <textarea
+                  id="drift-notes"
+                  name="notes"
+                  rows="3"
+                  placeholder="Capture what reviewers disagreed on."
+                  required
+                ></textarea>
+              </div>
+              <button class="primary" type="submit">Log drift signal</button>
+              <p class="form-status" id="drift-form-status" role="status" aria-live="polite"></p>
+            </form>
+            <div class="drift-metrics">
+              <div>
+                <span class="metric-label">Total signals</span>
+                <strong id="drift-total">—</strong>
+              </div>
+              <div>
+                <span class="metric-label">Avg spread</span>
+                <strong id="drift-average">—</strong>
+              </div>
+              <div>
+                <span class="metric-label">High risk</span>
+                <strong id="drift-high">—</strong>
+              </div>
+            </div>
+            <ul class="drift-list" id="drift-list"></ul>
+            <p class="drift-status" id="drift-status" role="status" aria-live="polite">
+              Loading drift log.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section id="drift" class="section drift">
+        <div class="section-title">
+          <h2>Rubric drift tracker</h2>
+          <p>Capture where reviewers diverge so the next calibration closes gaps.</p>
+        </div>
+        <div class="drift-grid">
+          <form class="drift-form" id="drift-form">
+            <div class="field">
+              <label for="drift-reviewer">Reviewer</label>
+              <input
+                id="drift-reviewer"
+                name="reviewer"
+                type="text"
+                placeholder="Reviewer name"
+                required
+              />
+            </div>
+            <div class="field">
+              <label for="drift-session">Session date (optional)</label>
+              <input id="drift-session" name="session_date" type="date" />
+            </div>
+            <div class="field">
+              <label for="drift-stage">Cycle stage</label>
+              <select id="drift-stage" name="stage" required>
+                <option value="">Select one</option>
+                <option value="prep">Prep & onboarding</option>
+                <option value="scoring">Active scoring</option>
+                <option value="decision">Decision meeting</option>
+                <option value="post">Post-cycle review</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="drift-type">Drift type</label>
+              <select id="drift-type" name="drift_type" required>
+                <option value="">Select one</option>
+                <option value="criteria">Criteria interpretation</option>
+                <option value="evidence">Evidence expectations</option>
+                <option value="bias">Bias disruption</option>
+                <option value="scoring">Score spread</option>
+                <option value="consensus">Consensus breakdown</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="drift-severity">Severity</label>
+              <select id="drift-severity" name="severity" required>
+                <option value="">Select one</option>
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="drift-notes">Notes</label>
+              <textarea
+                id="drift-notes"
+                name="notes"
+                rows="4"
+                placeholder="What disagreement surfaced? What anchor is missing?"
+                required
+              ></textarea>
+            </div>
+            <label class="checkbox">
+              <input id="drift-action-needed" name="action_needed" type="checkbox" />
+              Action needed before next cycle.
+            </label>
+            <button class="primary" type="submit">Log drift signal</button>
+            <p class="form-status" id="drift-status" role="status" aria-live="polite"></p>
+          </form>
+          <div class="drift-board">
+            <div class="drift-metrics">
+              <div>
+                <span class="metric-label">Total drift logs</span>
+                <strong id="drift-total">—</strong>
+              </div>
+              <div>
+                <span class="metric-label">High severity</span>
+                <strong id="drift-high">—</strong>
+              </div>
+              <div>
+                <span class="metric-label">Action needed</span>
+                <strong id="drift-action">—</strong>
+              </div>
+              <div>
+                <span class="metric-label">Last log</span>
+                <strong id="drift-last">—</strong>
+              </div>
+            </div>
+            <div class="drift-splits">
+              <div>
+                <span class="metric-label">Stage mix</span>
+                <ul class="pulse-list" id="drift-stages">
+                  <li>Loading...</li>
+                </ul>
+              </div>
+              <div>
+                <span class="metric-label">Drift mix</span>
+                <ul class="pulse-list" id="drift-types">
+                  <li>Loading...</li>
+                </ul>
+              </div>
+            </div>
+            <div class="drift-recent">
+              <span class="metric-label">Recent signals</span>
+              <ul class="drift-list" id="drift-recent">
+                <li>Loading...</li>
+              </ul>
+              <p class="drift-status" id="drift-recent-status">Loading recent drift.</p>
+            </div>
           </div>
         </div>
       </section>

@@ -28,6 +28,23 @@ const actionDueSoon = document.getElementById("action-due-soon");
 const actionLast = document.getElementById("action-last");
 const actionStatuses = document.getElementById("action-statuses");
 const actionPriorities = document.getElementById("action-priorities");
+const driftForm = document.getElementById("drift-form");
+const driftStatus = document.getElementById("drift-status");
+const driftTotal = document.getElementById("drift-total");
+const driftHigh = document.getElementById("drift-high");
+const driftAction = document.getElementById("drift-action");
+const driftLast = document.getElementById("drift-last");
+const driftStages = document.getElementById("drift-stages");
+const driftTypes = document.getElementById("drift-types");
+const driftRecent = document.getElementById("drift-recent");
+const driftRecentStatus = document.getElementById("drift-recent-status");
+const driftForm = document.getElementById("drift-form");
+const driftFormStatus = document.getElementById("drift-form-status");
+const driftList = document.getElementById("drift-list");
+const driftStatus = document.getElementById("drift-status");
+const driftTotal = document.getElementById("drift-total");
+const driftAverage = document.getElementById("drift-average");
+const driftHigh = document.getElementById("drift-high");
 
 if (form) {
   form.addEventListener("submit", async (event) => {
@@ -100,6 +117,84 @@ if (actionForm) {
   });
 }
 
+if (driftForm) {
+  driftForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (driftFormStatus) {
+      driftFormStatus.textContent = "Logging drift signal...";
+    }
+
+    const formData = new FormData(driftForm);
+    const payload = Object.fromEntries(formData.entries());
+
+    try {
+      const response = await fetch("/api/calibration-drift", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result.error || "Request failed");
+      }
+
+      driftForm.reset();
+      if (driftFormStatus) {
+        driftFormStatus.textContent = "Drift signal logged.";
+      }
+      loadDriftSummary();
+      loadDriftEntries();
+    } catch (error) {
+      if (driftFormStatus) {
+        driftFormStatus.textContent =
+          error.message || "Could not log drift signal.";
+      }
+    }
+  });
+}
+
+if (driftForm) {
+  driftForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (driftStatus) {
+      driftStatus.textContent = "Logging drift signal...";
+    }
+
+    const formData = new FormData(driftForm);
+    const payload = Object.fromEntries(formData.entries());
+    payload.action_needed = formData.get("action_needed") === "on";
+
+    try {
+      const response = await fetch("/api/drift-log", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result.error || "Request failed");
+      }
+
+      driftForm.reset();
+      if (driftStatus) {
+        driftStatus.textContent = "Drift logged. Thanks for the signal.";
+      }
+      loadDriftSummary();
+      loadDriftRecent();
+    } catch (error) {
+      if (driftStatus) {
+        driftStatus.textContent = error.message || "Could not log drift.";
+      }
+    }
+  });
+}
+
 const labelMaps = {
   stage: {
     prep: "Prep & onboarding",
@@ -114,6 +209,13 @@ const labelMaps = {
     calibration: "Calibration drift",
     workflow: "Workflow friction",
   },
+  driftType: {
+    criteria: "Criteria interpretation",
+    evidence: "Evidence expectations",
+    bias: "Bias disruption",
+    scoring: "Score spread",
+    consensus: "Consensus breakdown",
+  },
 };
 
 const actionLabels = {
@@ -127,6 +229,16 @@ const actionLabels = {
     high: "High priority",
     medium: "Medium priority",
     low: "Low priority",
+  },
+};
+
+const driftLabels = {
+  issue_type: {
+    anchors: "Anchor alignment",
+    weighting: "Weighting confusion",
+    evidence: "Evidence mismatch",
+    consistency: "Reviewer consistency",
+    workflow: "Workflow friction",
   },
 };
 
@@ -214,6 +326,64 @@ function renderRecent(el, entries) {
     const focusTag = document.createElement("span");
     focusTag.textContent = labelMaps.focus[entry.focus] || entry.focus;
     tags.append(stageTag, focusTag);
+
+    item.append(meta, note, tags);
+    el.appendChild(item);
+  });
+}
+
+function renderDriftRecent(el, entries) {
+  if (!el) return;
+  el.innerHTML = "";
+  if (!entries || !entries.length) {
+    const item = document.createElement("li");
+    item.textContent = "No drift signals yet.";
+    el.appendChild(item);
+    return;
+  }
+
+  entries.forEach((entry) => {
+    const item = document.createElement("li");
+
+    const meta = document.createElement("div");
+    meta.className = "drift-meta";
+    const reviewer = document.createElement("span");
+    reviewer.textContent = entry.reviewer || "Reviewer";
+    const created = document.createElement("span");
+    created.textContent = formatDate(entry.created_at);
+    meta.append(reviewer, created);
+
+    const note = document.createElement("p");
+    note.textContent = entry.notes || "No notes provided.";
+
+    const tags = document.createElement("div");
+    tags.className = "drift-tags";
+
+    if (entry.stage) {
+      const stageTag = document.createElement("span");
+      stageTag.textContent = labelMaps.stage[entry.stage] || entry.stage;
+      tags.appendChild(stageTag);
+    }
+
+    if (entry.drift_type) {
+      const typeTag = document.createElement("span");
+      typeTag.textContent =
+        labelMaps.driftType[entry.drift_type] || entry.drift_type;
+      tags.appendChild(typeTag);
+    }
+
+    if (entry.severity) {
+      const severityTag = document.createElement("span");
+      severityTag.className = `severity-${entry.severity}`;
+      severityTag.textContent = entry.severity;
+      tags.appendChild(severityTag);
+    }
+
+    if (entry.action_needed) {
+      const actionTag = document.createElement("span");
+      actionTag.textContent = "Action needed";
+      tags.appendChild(actionTag);
+    }
 
     item.append(meta, note, tags);
     el.appendChild(item);
@@ -383,6 +553,52 @@ function renderActions(el, entries) {
   });
 }
 
+function renderDriftEntries(el, entries) {
+  if (!el) return;
+  el.innerHTML = "";
+  if (!entries.length) {
+    const item = document.createElement("li");
+    item.textContent = "No drift signals yet.";
+    el.appendChild(item);
+    return;
+  }
+
+  entries.forEach((entry) => {
+    const item = document.createElement("li");
+    item.className = "drift-item";
+
+    const title = document.createElement("h4");
+    title.textContent = entry.criterion || "Unknown criterion";
+
+    const tags = document.createElement("div");
+    tags.className = "drift-tags";
+
+    const spread = document.createElement("span");
+    spread.className = "drift-tag";
+    spread.textContent = `${entry.spread || "—"} pt spread`;
+
+    const issue = document.createElement("span");
+    issue.className = "drift-tag";
+    issue.textContent =
+      driftLabels.issue_type[entry.issue_type] ||
+      entry.issue_type ||
+      "Signal";
+
+    const date = document.createElement("span");
+    date.className = "drift-tag";
+    date.textContent = formatDate(entry.created_at);
+
+    tags.append(spread, issue, date);
+
+    const notes = document.createElement("p");
+    notes.className = "muted";
+    notes.textContent = entry.notes || "No notes captured.";
+
+    item.append(title, tags, notes);
+    el.appendChild(item);
+  });
+}
+
 async function loadPulseSummary() {
   if (!pulseStatus) return;
   pulseStatus.textContent = "Syncing with database...";
@@ -447,6 +663,88 @@ async function loadActions() {
       item.textContent = error.message || "Could not load actions.";
       actionList.appendChild(item);
     }
+  }
+}
+
+async function loadDriftSummary() {
+  if (!driftStatus) return;
+  driftStatus.textContent = "Loading drift log...";
+  try {
+    const response = await fetch("/api/calibration-drift-summary");
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(result.error || "Unable to load drift summary.");
+    }
+
+    if (driftTotal) driftTotal.textContent = result.total ?? "0";
+    if (driftAverage) driftAverage.textContent = result.average_spread ?? "—";
+    if (driftHigh) driftHigh.textContent = result.high_risk ?? "0";
+
+    driftStatus.textContent = "Drift signals synced.";
+  } catch (error) {
+    driftStatus.textContent =
+      error.message || "Could not load drift summary.";
+  }
+}
+
+async function loadDriftEntries() {
+  if (!driftStatus) return;
+  try {
+    const response = await fetch("/api/calibration-drift-recent");
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(result.error || "Unable to load drift signals.");
+    }
+
+    renderDriftEntries(driftList, result.entries || []);
+  } catch (error) {
+    if (driftList) {
+      driftList.innerHTML = "";
+      const item = document.createElement("li");
+      item.textContent = error.message || "Could not load drift signals.";
+      driftList.appendChild(item);
+    }
+  }
+}
+
+async function loadDriftSummary() {
+  if (!driftRecentStatus) return;
+  driftRecentStatus.textContent = "Loading drift summary...";
+  try {
+    const response = await fetch("/api/drift-summary");
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(result.error || "Unable to load drift summary.");
+    }
+
+    if (driftTotal) driftTotal.textContent = result.total ?? "0";
+    if (driftHigh) driftHigh.textContent = result.high_severity ?? "0";
+    if (driftAction) driftAction.textContent = result.action_needed ?? "0";
+    if (driftLast) driftLast.textContent = formatDate(result.last_entry);
+
+    renderList(driftStages, result.stages, labelMaps.stage);
+    renderList(driftTypes, result.types, labelMaps.driftType);
+    driftRecentStatus.textContent = "Drift summary updated.";
+  } catch (error) {
+    driftRecentStatus.textContent =
+      error.message || "Could not load drift summary.";
+  }
+}
+
+async function loadDriftRecent() {
+  if (!driftRecentStatus) return;
+  driftRecentStatus.textContent = "Loading recent drift signals...";
+  try {
+    const response = await fetch("/api/drift-recent");
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(result.error || "Unable to load recent drift.");
+    }
+    renderDriftRecent(driftRecent, result.entries || []);
+    driftRecentStatus.textContent = "Recent drift synced.";
+  } catch (error) {
+    driftRecentStatus.textContent =
+      error.message || "Could not load recent drift.";
   }
 }
 
@@ -567,3 +865,7 @@ loadFollowups();
 loadHotspots();
 loadActionSummary();
 loadActions();
+loadDriftSummary();
+loadDriftRecent();
+loadDriftSummary();
+loadDriftEntries();

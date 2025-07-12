@@ -69,3 +69,8 @@
 - Built new Postgres-backed API endpoints for calibration actions plus status/priority summaries.
 - Seeded production with realistic calibration action items and refreshed styling for the new section.
 - Fixed duplicate pulse element bindings in the client script.
+
+## Iteration 103
+- Added a calibration drift watch card with a variance log form, metrics, and recent signals list.
+- Built Postgres-backed drift endpoints (create, summary, recent) with validation and safety caps.
+- Seeded production with starter drift signals and wired the client to render the new dashboard.
