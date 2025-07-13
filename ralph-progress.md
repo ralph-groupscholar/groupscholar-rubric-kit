@@ -74,3 +74,4 @@
 - Added a calibration drift watch card with a variance log form, metrics, and recent signals list.
 - Built Postgres-backed drift endpoints (create, summary, recent) with validation and safety caps.
 - Seeded production with starter drift signals and wired the client to render the new dashboard.
+- Attempted `vercel --prod` but hit the daily deployment limit.
