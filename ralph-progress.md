@@ -75,3 +75,12 @@
 - Built Postgres-backed drift endpoints (create, summary, recent) with validation and safety caps.
 - Seeded production with starter drift signals and wired the client to render the new dashboard.
 - Attempted `vercel --prod` but hit the daily deployment limit.
+
+## Iteration 104
+- Consolidated drift tracking to a single rubric drift tracker section to remove duplicate forms/IDs.
+- Simplified client logic to use the rubric drift log endpoints only and removed duplicate loaders.
+- Deleted deprecated calibration drift endpoints to prevent conflicting data paths.
+
+## Iteration 105
+- Removed duplicate reviewer load fetchers so the ledger consistently uses the reviewer-load endpoints.
+- Cleaned up duplicate capacity loader calls to avoid double refreshes on page load.

@@ -19,6 +19,15 @@ const pulseTrendChart = document.getElementById("pulse-trend-chart");
 const pulseTrendStatus = document.getElementById("pulse-trend-status");
 const pulseTrendFocus = document.getElementById("pulse-trend-focus");
 const pulseTrendStage = document.getElementById("pulse-trend-stage");
+const capacityForm = document.getElementById("capacity-form");
+const capacityFormStatus = document.getElementById("capacity-form-status");
+const capacityAverage = document.getElementById("capacity-average");
+const capacityHours = document.getElementById("capacity-hours");
+const capacityRisk = document.getElementById("capacity-risk");
+const capacityRiskList = document.getElementById("capacity-risk-list");
+const capacityRecent = document.getElementById("capacity-recent");
+const capacityRecentStatus = document.getElementById("capacity-recent-status");
+const capacityStatus = document.getElementById("capacity-status");
 const actionForm = document.getElementById("action-form");
 const actionStatus = document.getElementById("action-status");
 const actionList = document.getElementById("action-list");
@@ -38,14 +47,6 @@ const driftStages = document.getElementById("drift-stages");
 const driftTypes = document.getElementById("drift-types");
 const driftRecent = document.getElementById("drift-recent");
 const driftRecentStatus = document.getElementById("drift-recent-status");
-const driftForm = document.getElementById("drift-form");
-const driftFormStatus = document.getElementById("drift-form-status");
-const driftList = document.getElementById("drift-list");
-const driftStatus = document.getElementById("drift-status");
-const driftTotal = document.getElementById("drift-total");
-const driftAverage = document.getElementById("drift-average");
-const driftHigh = document.getElementById("drift-high");
-
 if (form) {
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -75,6 +76,45 @@ if (form) {
         "Thanks! Feedback saved for the rubric sprint lead.";
     } catch (error) {
       statusEl.textContent = error.message || "Could not save feedback.";
+    }
+  });
+}
+
+if (capacityForm) {
+  capacityForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (capacityFormStatus) {
+      capacityFormStatus.textContent = "Saving load check-in...";
+    }
+
+    const formData = new FormData(capacityForm);
+    const payload = Object.fromEntries(formData.entries());
+
+    try {
+      const response = await fetch("/api/reviewer-load", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result.error || "Request failed");
+      }
+
+      capacityForm.reset();
+      if (capacityFormStatus) {
+        capacityFormStatus.textContent = "Load check-in saved.";
+      }
+      loadCapacitySummary();
+      loadCapacityRecent();
+    } catch (error) {
+      if (capacityFormStatus) {
+        capacityFormStatus.textContent =
+          error.message || "Could not save check-in.";
+      }
     }
   });
 }
@@ -112,45 +152,6 @@ if (actionForm) {
     } catch (error) {
       if (actionStatus) {
         actionStatus.textContent = error.message || "Could not save action.";
-      }
-    }
-  });
-}
-
-if (driftForm) {
-  driftForm.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    if (driftFormStatus) {
-      driftFormStatus.textContent = "Logging drift signal...";
-    }
-
-    const formData = new FormData(driftForm);
-    const payload = Object.fromEntries(formData.entries());
-
-    try {
-      const response = await fetch("/api/calibration-drift", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-
-      const result = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        throw new Error(result.error || "Request failed");
-      }
-
-      driftForm.reset();
-      if (driftFormStatus) {
-        driftFormStatus.textContent = "Drift signal logged.";
-      }
-      loadDriftSummary();
-      loadDriftEntries();
-    } catch (error) {
-      if (driftFormStatus) {
-        driftFormStatus.textContent =
-          error.message || "Could not log drift signal.";
       }
     }
   });
@@ -216,6 +217,11 @@ const labelMaps = {
     scoring: "Score spread",
     consensus: "Consensus breakdown",
   },
+  risk: {
+    low: "Low risk",
+    medium: "Medium risk",
+    high: "High risk",
+  },
 };
 
 const actionLabels = {
@@ -232,14 +238,10 @@ const actionLabels = {
   },
 };
 
-const driftLabels = {
-  issue_type: {
-    anchors: "Anchor alignment",
-    weighting: "Weighting confusion",
-    evidence: "Evidence mismatch",
-    consistency: "Reviewer consistency",
-    workflow: "Workflow friction",
-  },
+const riskLabels = {
+  low: "Low risk",
+  medium: "Medium risk",
+  high: "High risk",
 };
 
 function formatDate(value) {
@@ -261,6 +263,13 @@ function formatDay(value) {
     month: "short",
     day: "numeric",
   });
+}
+
+function formatNumber(value, digits = 1) {
+  if (value === null || value === undefined || value === "") return "—";
+  const parsed = Number(value);
+  if (Number.isNaN(parsed)) return "—";
+  return parsed % 1 === 0 ? parsed.toString() : parsed.toFixed(digits);
 }
 
 function toDateKey(value) {
@@ -328,6 +337,58 @@ function renderRecent(el, entries) {
     tags.append(stageTag, focusTag);
 
     item.append(meta, note, tags);
+    el.appendChild(item);
+  });
+}
+
+function renderCapacityRecent(el, entries) {
+  if (!el) return;
+  el.innerHTML = "";
+  if (!entries || !entries.length) {
+    const item = document.createElement("li");
+    item.textContent = "No load check-ins yet.";
+    el.appendChild(item);
+    return;
+  }
+
+  entries.forEach((entry) => {
+    const item = document.createElement("li");
+    const meta = document.createElement("div");
+    meta.className = "capacity-meta";
+
+    const reviewer = document.createElement("span");
+    reviewer.textContent =
+      entry.reviewer_label || entry.reviewer || "Reviewer";
+    const created = document.createElement("span");
+    created.textContent = formatDate(entry.created_at);
+    meta.append(reviewer, created);
+
+    const tags = document.createElement("div");
+    tags.className = "capacity-tags";
+
+    const assignmentsTag = document.createElement("span");
+    assignmentsTag.textContent = `${entry.assignments ?? 0} assignments`;
+
+    const hoursTag = document.createElement("span");
+    hoursTag.textContent = `${formatNumber(entry.hours, 1)} hrs`;
+
+    const riskTag = document.createElement("span");
+    riskTag.textContent =
+      labelMaps.risk[entry.risk_level] || entry.risk_level || "Risk";
+
+    const stageTag = document.createElement("span");
+    stageTag.textContent = labelMaps.stage[entry.stage] || entry.stage || "Stage";
+
+    tags.append(assignmentsTag, hoursTag, riskTag, stageTag);
+
+    item.append(meta);
+    if (entry.notes) {
+      const notes = document.createElement("p");
+      notes.className = "muted";
+      notes.textContent = entry.notes;
+      item.appendChild(notes);
+    }
+    item.appendChild(tags);
     el.appendChild(item);
   });
 }
@@ -553,48 +614,63 @@ function renderActions(el, entries) {
   });
 }
 
-function renderDriftEntries(el, entries) {
+function renderCapacityRecent(el, entries) {
   if (!el) return;
   el.innerHTML = "";
-  if (!entries.length) {
+  if (!entries || !entries.length) {
     const item = document.createElement("li");
-    item.textContent = "No drift signals yet.";
+    item.textContent = "No capacity check-ins yet.";
     el.appendChild(item);
     return;
   }
 
   entries.forEach((entry) => {
     const item = document.createElement("li");
-    item.className = "drift-item";
 
-    const title = document.createElement("h4");
-    title.textContent = entry.criterion || "Unknown criterion";
+    const meta = document.createElement("div");
+    meta.className = "capacity-meta";
+    const reviewer = document.createElement("span");
+    reviewer.textContent = entry.reviewer || "Reviewer";
+    const created = document.createElement("span");
+    created.textContent = formatDate(entry.created_at);
+    meta.append(reviewer, created);
 
-    const tags = document.createElement("div");
-    tags.className = "drift-tags";
-
-    const spread = document.createElement("span");
-    spread.className = "drift-tag";
-    spread.textContent = `${entry.spread || "—"} pt spread`;
-
-    const issue = document.createElement("span");
-    issue.className = "drift-tag";
-    issue.textContent =
-      driftLabels.issue_type[entry.issue_type] ||
-      entry.issue_type ||
-      "Signal";
-
-    const date = document.createElement("span");
-    date.className = "drift-tag";
-    date.textContent = formatDate(entry.created_at);
-
-    tags.append(spread, issue, date);
+    const detail = document.createElement("p");
+    const assignments = Number(entry.assignments ?? 0);
+    const hours = Number(entry.hours ?? 0);
+    detail.textContent = `Assignments: ${assignments} · Hours: ${formatNumber(hours)}`;
 
     const notes = document.createElement("p");
-    notes.className = "muted";
-    notes.textContent = entry.notes || "No notes captured.";
+    notes.textContent = entry.notes ? entry.notes : "No notes shared.";
 
-    item.append(title, tags, notes);
+    const tags = document.createElement("div");
+    tags.className = "capacity-tags";
+
+    if (entry.role) {
+      const roleTag = document.createElement("span");
+      roleTag.textContent = entry.role;
+      tags.appendChild(roleTag);
+    }
+
+    if (entry.stage) {
+      const stageTag = document.createElement("span");
+      stageTag.textContent = labelMaps.stage[entry.stage] || entry.stage;
+      tags.appendChild(stageTag);
+    }
+
+    if (entry.risk_level) {
+      const riskTag = document.createElement("span");
+      riskTag.textContent = riskLabels[entry.risk_level] || entry.risk_level;
+      tags.appendChild(riskTag);
+    }
+
+    if (entry.confidence) {
+      const confidenceTag = document.createElement("span");
+      confidenceTag.textContent = `Confidence ${entry.confidence}`;
+      tags.appendChild(confidenceTag);
+    }
+
+    item.append(meta, detail, notes, tags);
     el.appendChild(item);
   });
 }
@@ -621,6 +697,51 @@ async function loadPulseSummary() {
     if (pulseStatus) {
       pulseStatus.textContent = error.message || "Could not load pulse data.";
     }
+  }
+}
+
+async function loadCapacitySummary() {
+  if (!capacityStatus) return;
+  capacityStatus.textContent = "Loading capacity ledger...";
+  try {
+    const response = await fetch("/api/reviewer-load-summary");
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(result.error || "Unable to load capacity data.");
+    }
+
+    if (capacityAverage) {
+      capacityAverage.textContent = formatNumber(result.avg_assignments, 1);
+    }
+    if (capacityHours) {
+      capacityHours.textContent = formatNumber(result.total_hours, 1);
+    }
+    if (capacityRisk) {
+      capacityRisk.textContent = result.high_risk ?? "0";
+    }
+
+    renderList(capacityRiskList, result.risk_mix, labelMaps.risk);
+    capacityStatus.textContent = "Capacity ledger synced.";
+  } catch (error) {
+    capacityStatus.textContent =
+      error.message || "Could not load capacity ledger.";
+  }
+}
+
+async function loadCapacityRecent() {
+  if (!capacityRecentStatus) return;
+  capacityRecentStatus.textContent = "Loading latest check-ins...";
+  try {
+    const response = await fetch("/api/reviewer-load-recent");
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(result.error || "Unable to load recent check-ins.");
+    }
+    renderCapacityRecent(capacityRecent, result.entries || []);
+    capacityRecentStatus.textContent = "Latest check-ins loaded.";
+  } catch (error) {
+    capacityRecentStatus.textContent =
+      error.message || "Could not load recent check-ins.";
   }
 }
 
@@ -667,47 +788,6 @@ async function loadActions() {
 }
 
 async function loadDriftSummary() {
-  if (!driftStatus) return;
-  driftStatus.textContent = "Loading drift log...";
-  try {
-    const response = await fetch("/api/calibration-drift-summary");
-    const result = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      throw new Error(result.error || "Unable to load drift summary.");
-    }
-
-    if (driftTotal) driftTotal.textContent = result.total ?? "0";
-    if (driftAverage) driftAverage.textContent = result.average_spread ?? "—";
-    if (driftHigh) driftHigh.textContent = result.high_risk ?? "0";
-
-    driftStatus.textContent = "Drift signals synced.";
-  } catch (error) {
-    driftStatus.textContent =
-      error.message || "Could not load drift summary.";
-  }
-}
-
-async function loadDriftEntries() {
-  if (!driftStatus) return;
-  try {
-    const response = await fetch("/api/calibration-drift-recent");
-    const result = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      throw new Error(result.error || "Unable to load drift signals.");
-    }
-
-    renderDriftEntries(driftList, result.entries || []);
-  } catch (error) {
-    if (driftList) {
-      driftList.innerHTML = "";
-      const item = document.createElement("li");
-      item.textContent = error.message || "Could not load drift signals.";
-      driftList.appendChild(item);
-    }
-  }
-}
-
-async function loadDriftSummary() {
   if (!driftRecentStatus) return;
   driftRecentStatus.textContent = "Loading drift summary...";
   try {
@@ -747,6 +827,7 @@ async function loadDriftRecent() {
       error.message || "Could not load recent drift.";
   }
 }
+
 
 async function loadTrendPulse() {
   if (!pulseTrendStatus) return;
@@ -863,9 +944,9 @@ loadTrendPulse();
 loadRecentFeedback();
 loadFollowups();
 loadHotspots();
+loadCapacitySummary();
+loadCapacityRecent();
 loadActionSummary();
 loadActions();
 loadDriftSummary();
 loadDriftRecent();
-loadDriftSummary();
-loadDriftEntries();
