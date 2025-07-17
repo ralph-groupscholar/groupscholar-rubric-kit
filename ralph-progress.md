@@ -99,3 +99,9 @@
 - Added a reviewer load trendline card with 14-day check-in totals, average hours, and peak day tracking.
 - Built a reviewer-load-trends API endpoint to aggregate daily load counts and average hours.
 - Wired capacity trend loading into the dashboard refresh flow and check-in submission path.
+
+## Iteration 136
+- Added a rubric change backlog section with a submission form, summary metrics, and recent change list.
+- Built new Postgres-backed API endpoints for change submissions, summary mixes, and recent queue data.
+- Added a seed script and populated production with realistic change backlog entries.
+- Updated styling and client-side rendering to support the new change backlog dashboard.

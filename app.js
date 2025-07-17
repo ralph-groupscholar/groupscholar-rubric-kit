@@ -46,6 +46,17 @@ const actionDueSoon = document.getElementById("action-due-soon");
 const actionLast = document.getElementById("action-last");
 const actionStatuses = document.getElementById("action-statuses");
 const actionPriorities = document.getElementById("action-priorities");
+const changeForm = document.getElementById("change-form");
+const changeStatus = document.getElementById("change-status");
+const changeList = document.getElementById("change-list");
+const changeSummaryStatus = document.getElementById("change-summary-status");
+const changeTotal = document.getElementById("change-total");
+const changeOpen = document.getElementById("change-open");
+const changeHigh = document.getElementById("change-high");
+const changeLast = document.getElementById("change-last");
+const changeStatuses = document.getElementById("change-statuses");
+const changeImpacts = document.getElementById("change-impacts");
+const changeAreas = document.getElementById("change-areas");
 const driftForm = document.getElementById("drift-form");
 const driftStatus = document.getElementById("drift-status");
 const driftTotal = document.getElementById("drift-total");
@@ -169,6 +180,45 @@ if (actionForm) {
   });
 }
 
+if (changeForm) {
+  changeForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (changeStatus) {
+      changeStatus.textContent = "Saving change request...";
+    }
+
+    const formData = new FormData(changeForm);
+    const payload = Object.fromEntries(formData.entries());
+
+    try {
+      const response = await fetch("/api/rubric-change", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result.error || "Request failed");
+      }
+
+      changeForm.reset();
+      if (changeStatus) {
+        changeStatus.textContent = "Change added to backlog.";
+      }
+      loadChangeSummary();
+      loadChangeRecent();
+    } catch (error) {
+      if (changeStatus) {
+        changeStatus.textContent =
+          error.message || "Could not save change request.";
+      }
+    }
+  });
+}
+
 if (driftForm) {
   driftForm.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -247,6 +297,28 @@ const actionLabels = {
     high: "High priority",
     medium: "Medium priority",
     low: "Low priority",
+  },
+};
+
+const changeLabels = {
+  status: {
+    proposed: "Proposed",
+    approved: "Approved",
+    in_progress: "In progress",
+    shipped: "Shipped",
+  },
+  impact: {
+    high: "High impact",
+    medium: "Medium impact",
+    low: "Low impact",
+  },
+  area: {
+    criteria: "Criteria clarity",
+    evidence: "Evidence signals",
+    scoring: "Scoring anchors",
+    weights: "Weighting & priorities",
+    workflow: "Workflow & training",
+    communication: "Scholar communication",
   },
 };
 
@@ -626,6 +698,76 @@ function renderActions(el, entries) {
   });
 }
 
+function renderChanges(el, entries) {
+  if (!el) return;
+  el.innerHTML = "";
+  if (!entries || !entries.length) {
+    const item = document.createElement("li");
+    item.textContent = "No change requests yet.";
+    el.appendChild(item);
+    return;
+  }
+
+  entries.forEach((entry) => {
+    const item = document.createElement("li");
+
+    const header = document.createElement("div");
+    header.className = "change-header";
+
+    const title = document.createElement("div");
+    title.className = "change-title";
+    title.textContent = entry.title || "Rubric update";
+
+    const status = document.createElement("span");
+    status.className = `change-chip status-${entry.status || "proposed"}`;
+    status.textContent =
+      changeLabels.status[entry.status] || entry.status || "Proposed";
+
+    header.append(title, status);
+
+    const meta = document.createElement("div");
+    meta.className = "change-meta";
+    const owner = document.createElement("span");
+    owner.textContent = entry.owner ? `Owner: ${entry.owner}` : "Owner TBD";
+    const due = document.createElement("span");
+    due.textContent = entry.due_date
+      ? `Target ${formatDate(entry.due_date)}`
+      : "No target date";
+    meta.append(owner, due);
+
+    const detail = document.createElement("p");
+    detail.textContent = entry.notes || "No notes attached yet.";
+
+    const tags = document.createElement("div");
+    tags.className = "change-tags";
+
+    if (entry.area) {
+      const areaTag = document.createElement("span");
+      areaTag.textContent = changeLabels.area[entry.area] || entry.area;
+      tags.appendChild(areaTag);
+    }
+
+    if (entry.impact) {
+      const impactTag = document.createElement("span");
+      impactTag.className = `impact-${entry.impact}`;
+      impactTag.textContent =
+        changeLabels.impact[entry.impact] || entry.impact;
+      tags.appendChild(impactTag);
+    }
+
+    if (entry.status) {
+      const statusTag = document.createElement("span");
+      statusTag.className = `status-${entry.status}`;
+      statusTag.textContent =
+        changeLabels.status[entry.status] || entry.status;
+      tags.appendChild(statusTag);
+    }
+
+    item.append(header, meta, detail, tags);
+    el.appendChild(item);
+  });
+}
+
 function renderCapacityRecent(el, entries) {
   if (!el) return;
   el.innerHTML = "";
@@ -995,6 +1137,50 @@ async function loadActions() {
   }
 }
 
+async function loadChangeSummary() {
+  if (!changeSummaryStatus) return;
+  changeSummaryStatus.textContent = "Loading change backlog...";
+  try {
+    const response = await fetch("/api/rubric-change-summary");
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(result.error || "Unable to load change summary.");
+    }
+
+    if (changeTotal) changeTotal.textContent = result.total ?? "0";
+    if (changeOpen) changeOpen.textContent = result.open ?? "0";
+    if (changeHigh) changeHigh.textContent = result.high_impact ?? "0";
+    if (changeLast) changeLast.textContent = formatDate(result.last_change);
+
+    renderList(changeStatuses, result.statuses, changeLabels.status);
+    renderList(changeImpacts, result.impacts, changeLabels.impact);
+    renderList(changeAreas, result.areas, changeLabels.area);
+    changeSummaryStatus.textContent = "Change backlog synced.";
+  } catch (error) {
+    changeSummaryStatus.textContent =
+      error.message || "Could not load change backlog.";
+  }
+}
+
+async function loadChangeRecent() {
+  if (!changeSummaryStatus) return;
+  try {
+    const response = await fetch("/api/rubric-change-recent");
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(result.error || "Unable to load change list.");
+    }
+    renderChanges(changeList, result.entries || []);
+  } catch (error) {
+    if (changeList) {
+      changeList.innerHTML = "";
+      const item = document.createElement("li");
+      item.textContent = error.message || "Could not load change list.";
+      changeList.appendChild(item);
+    }
+  }
+}
+
 async function loadDriftSummary() {
   if (!driftRecentStatus) return;
   driftRecentStatus.textContent = "Loading drift summary...";
@@ -1159,5 +1345,7 @@ loadCapacityAlerts();
 loadCapacityStages();
 loadActionSummary();
 loadActions();
+loadChangeSummary();
+loadChangeRecent();
 loadDriftSummary();
 loadDriftRecent();

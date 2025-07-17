@@ -23,6 +23,7 @@
           <a href="#calibration">Calibration</a>
           <a href="#drift">Drift</a>
           <a href="#actions">Actions</a>
+          <a href="#changes">Changes</a>
           <a href="#templates">Templates</a>
           <a href="#signals">Signals</a>
           <a href="#feedback">Feedback</a>
@@ -439,6 +440,129 @@
             </ul>
             <p class="actions-status" id="action-summary-status">
               Loading action board.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section id="changes" class="section change">
+        <div class="section-title">
+          <h2>Rubric change backlog</h2>
+          <p>Log proposed updates and keep revision work visible between cycles.</p>
+        </div>
+        <div class="change-grid">
+          <form class="change-form" id="change-form">
+            <div class="field">
+              <label for="change-title">Change title</label>
+              <input
+                id="change-title"
+                name="title"
+                type="text"
+                placeholder="e.g., Add context rubric for caregiving responsibilities"
+                required
+              />
+            </div>
+            <div class="field">
+              <label for="change-area">Rubric area</label>
+              <select id="change-area" name="area" required>
+                <option value="">Select one</option>
+                <option value="criteria">Criteria clarity</option>
+                <option value="evidence">Evidence signals</option>
+                <option value="scoring">Scoring anchors</option>
+                <option value="weights">Weighting & priorities</option>
+                <option value="workflow">Workflow & training</option>
+                <option value="communication">Scholar communication</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="change-impact">Impact</label>
+              <select id="change-impact" name="impact" required>
+                <option value="">Select one</option>
+                <option value="high">High impact</option>
+                <option value="medium">Medium impact</option>
+                <option value="low">Low impact</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="change-status-select">Status</label>
+              <select id="change-status-select" name="status" required>
+                <option value="">Select one</option>
+                <option value="proposed">Proposed</option>
+                <option value="approved">Approved</option>
+                <option value="in_progress">In progress</option>
+                <option value="shipped">Shipped</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="change-owner">Owner</label>
+              <input
+                id="change-owner"
+                name="owner"
+                type="text"
+                placeholder="Reviewer or program lead"
+                required
+              />
+            </div>
+            <div class="field">
+              <label for="change-due">Target date (optional)</label>
+              <input id="change-due" name="due_date" type="date" />
+            </div>
+            <div class="field">
+              <label for="change-notes">Notes</label>
+              <textarea
+                id="change-notes"
+                name="notes"
+                rows="3"
+                placeholder="Reason for change, evidence, or dependencies."
+              ></textarea>
+            </div>
+            <button class="primary" type="submit">Add to backlog</button>
+            <p class="form-status" id="change-status" role="status" aria-live="polite"></p>
+          </form>
+          <div class="change-board">
+            <div class="change-metrics">
+              <div>
+                <span class="metric-label">Total changes</span>
+                <strong id="change-total">—</strong>
+              </div>
+              <div>
+                <span class="metric-label">Open items</span>
+                <strong id="change-open">—</strong>
+              </div>
+              <div>
+                <span class="metric-label">High impact</span>
+                <strong id="change-high">—</strong>
+              </div>
+              <div>
+                <span class="metric-label">Last update</span>
+                <strong id="change-last">—</strong>
+              </div>
+            </div>
+            <div class="change-splits">
+              <div>
+                <span class="metric-label">Status mix</span>
+                <ul class="pulse-list" id="change-statuses">
+                  <li>Loading...</li>
+                </ul>
+              </div>
+              <div>
+                <span class="metric-label">Impact mix</span>
+                <ul class="pulse-list" id="change-impacts">
+                  <li>Loading...</li>
+                </ul>
+              </div>
+              <div>
+                <span class="metric-label">Area focus</span>
+                <ul class="pulse-list" id="change-areas">
+                  <li>Loading...</li>
+                </ul>
+              </div>
+            </div>
+            <ul class="change-list" id="change-list">
+              <li>Loading...</li>
+            </ul>
+            <p class="change-status" id="change-summary-status">
+              Loading change backlog.
             </p>
           </div>
         </div>
