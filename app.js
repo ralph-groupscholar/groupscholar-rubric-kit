@@ -24,9 +24,18 @@ const capacityFormStatus = document.getElementById("capacity-form-status");
 const capacityAverage = document.getElementById("capacity-average");
 const capacityHours = document.getElementById("capacity-hours");
 const capacityRisk = document.getElementById("capacity-risk");
+const capacityTrendTotal = document.getElementById("capacity-trend-total");
+const capacityTrendHours = document.getElementById("capacity-trend-hours");
+const capacityTrendPeak = document.getElementById("capacity-trend-peak");
+const capacityTrendChart = document.getElementById("capacity-trend-chart");
+const capacityTrendStatus = document.getElementById("capacity-trend-status");
 const capacityRiskList = document.getElementById("capacity-risk-list");
+const capacityAlerts = document.getElementById("capacity-alerts");
+const capacityAlertsStatus = document.getElementById("capacity-alerts-status");
 const capacityRecent = document.getElementById("capacity-recent");
 const capacityRecentStatus = document.getElementById("capacity-recent-status");
+const capacityStageList = document.getElementById("capacity-stage-list");
+const capacityStageStatus = document.getElementById("capacity-stage-status");
 const capacityStatus = document.getElementById("capacity-status");
 const actionForm = document.getElementById("action-form");
 const actionStatus = document.getElementById("action-status");
@@ -109,7 +118,10 @@ if (capacityForm) {
         capacityFormStatus.textContent = "Load check-in saved.";
       }
       loadCapacitySummary();
+      loadCapacityTrend();
       loadCapacityRecent();
+      loadCapacityAlerts();
+      loadCapacityStages();
     } catch (error) {
       if (capacityFormStatus) {
         capacityFormStatus.textContent =
@@ -675,6 +687,112 @@ function renderCapacityRecent(el, entries) {
   });
 }
 
+function renderCapacityAlerts(el, entries) {
+  if (!el) return;
+  el.innerHTML = "";
+  if (!entries || !entries.length) {
+    const item = document.createElement("li");
+    item.textContent = "No overload risks flagged.";
+    el.appendChild(item);
+    return;
+  }
+
+  entries.forEach((entry) => {
+    const item = document.createElement("li");
+
+    const meta = document.createElement("div");
+    meta.className = "capacity-meta";
+    const reviewer = document.createElement("span");
+    reviewer.textContent = entry.reviewer || "Reviewer";
+    const created = document.createElement("span");
+    created.textContent = formatDate(entry.created_at);
+    meta.append(reviewer, created);
+
+    const detail = document.createElement("p");
+    const assignments = Number(entry.assignments ?? 0);
+    const hours = Number(entry.hours ?? 0);
+    detail.textContent = `Assignments: ${assignments} · Hours: ${formatNumber(hours)}`;
+
+    const notes = document.createElement("p");
+    notes.textContent = entry.notes ? entry.notes : "No notes shared.";
+
+    const tags = document.createElement("div");
+    tags.className = "capacity-tags";
+
+    if (entry.role) {
+      const roleTag = document.createElement("span");
+      roleTag.textContent = entry.role;
+      tags.appendChild(roleTag);
+    }
+
+    if (entry.stage) {
+      const stageTag = document.createElement("span");
+      stageTag.textContent = labelMaps.stage[entry.stage] || entry.stage;
+      tags.appendChild(stageTag);
+    }
+
+    if (entry.risk_level) {
+      const riskTag = document.createElement("span");
+      riskTag.textContent = riskLabels[entry.risk_level] || entry.risk_level;
+      tags.appendChild(riskTag);
+    }
+
+    if (entry.alert_level) {
+      const alertTag = document.createElement("span");
+      alertTag.className = `alert-tag alert-${entry.alert_level}`;
+      alertTag.textContent = `${entry.alert_level} alert`;
+      tags.appendChild(alertTag);
+    }
+
+    item.append(meta, detail, notes, tags);
+    el.appendChild(item);
+  });
+}
+
+function renderCapacityStages(el, entries) {
+  if (!el) return;
+  el.innerHTML = "";
+  if (!entries || !entries.length) {
+    const item = document.createElement("li");
+    item.textContent = "No stage load data yet.";
+    el.appendChild(item);
+    return;
+  }
+
+  entries.forEach((entry) => {
+    const item = document.createElement("li");
+
+    const meta = document.createElement("div");
+    meta.className = "capacity-meta";
+    const stage = document.createElement("span");
+    stage.textContent = labelMaps.stage[entry.stage] || entry.stage || "Stage";
+    const total = document.createElement("span");
+    total.textContent = `${entry.total ?? 0} check-ins`;
+    meta.append(stage, total);
+
+    const detail = document.createElement("p");
+    const avgAssignments = formatNumber(entry.avg_assignments, 1);
+    const avgHours = formatNumber(entry.avg_hours, 1);
+    detail.textContent = `Avg assignments: ${avgAssignments} · Avg hours: ${avgHours}`;
+
+    const tags = document.createElement("div");
+    tags.className = "capacity-tags";
+
+    const highRiskTag = document.createElement("span");
+    highRiskTag.textContent = `${entry.high_risk ?? 0} high risk`;
+    tags.appendChild(highRiskTag);
+
+    if (entry.last_checkin) {
+      const lastTag = document.createElement("span");
+      lastTag.textContent = `Last: ${formatDate(entry.last_checkin)}`;
+      tags.appendChild(lastTag);
+    }
+
+    item.append(meta, detail, tags);
+    el.appendChild(item);
+  });
+}
+
 async function loadPulseSummary() {
   if (!pulseStatus) return;
   pulseStatus.textContent = "Syncing with database...";
@@ -728,6 +846,62 @@ async function loadCapacitySummary() {
   }
 }
 
+async function loadCapacityTrend() {
+  if (!capacityTrendStatus) return;
+  capacityTrendStatus.textContent = "Loading capacity trendline...";
+  try {
+    const response = await fetch("/api/reviewer-load-trends");
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(result.error || "Unable to load trend data.");
+    }
+
+    const series = Array.isArray(result.series) ? result.series : [];
+    const dayMap = new Map();
+    series.forEach((entry) => {
+      const key = toDateKey(entry.day);
+      if (key) dayMap.set(key, Number(entry.count) || 0);
+    });
+
+    const today = new Date();
+    const trendEntries = [];
+    for (let i = 13; i >= 0; i -= 1) {
+      const date = new Date(today);
+      date.setDate(today.getDate() - i);
+      const key = toDateKey(date);
+      trendEntries.push({
+        day: date,
+        count: dayMap.get(key) || 0,
+      });
+    }
+
+    const totalRecent = trendEntries.reduce((acc, entry) => acc + entry.count, 0);
+    if (capacityTrendTotal) capacityTrendTotal.textContent = totalRecent;
+
+    if (capacityTrendHours) {
+      capacityTrendHours.textContent = formatNumber(result.avg_hours, 1);
+    }
+
+    const peakEntry =
+      trendEntries.reduce(
+        (best, entry) => (entry.count > best.count ? entry : best),
+        { count: -1, day: null }
+      ) || {};
+    if (capacityTrendPeak) {
+      capacityTrendPeak.textContent =
+        peakEntry.day && peakEntry.count >= 0
+          ? `${formatDay(peakEntry.day)} (${peakEntry.count})`
+          : "—";
+    }
+
+    renderTrendChart(capacityTrendChart, trendEntries);
+    capacityTrendStatus.textContent = "Capacity trend synced.";
+  } catch (error) {
+    capacityTrendStatus.textContent =
+      error.message || "Could not load trendline.";
+  }
+}
+
 async function loadCapacityRecent() {
   if (!capacityRecentStatus) return;
   capacityRecentStatus.textContent = "Loading latest check-ins...";
@@ -742,6 +916,40 @@ async function loadCapacityRecent() {
   } catch (error) {
     capacityRecentStatus.textContent =
       error.message || "Could not load recent check-ins.";
+  }
+}
+
+async function loadCapacityAlerts() {
+  if (!capacityAlertsStatus) return;
+  capacityAlertsStatus.textContent = "Scanning for overload risk...";
+  try {
+    const response = await fetch("/api/reviewer-load-alerts");
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(result.error || "Unable to load alerts.");
+    }
+    renderCapacityAlerts(capacityAlerts, result.entries || []);
+    capacityAlertsStatus.textContent = "Load alerts updated.";
+  } catch (error) {
+    capacityAlertsStatus.textContent =
+      error.message || "Could not load alerts.";
+  }
+}
+
+async function loadCapacityStages() {
+  if (!capacityStageStatus) return;
+  capacityStageStatus.textContent = "Loading stage coverage...";
+  try {
+    const response = await fetch("/api/reviewer-load-stages");
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(result.error || "Unable to load stage coverage.");
+    }
+    renderCapacityStages(capacityStageList, result.entries || []);
+    capacityStageStatus.textContent = "Stage coverage updated.";
+  } catch (error) {
+    capacityStageStatus.textContent =
+      error.message || "Could not load stage coverage.";
   }
 }
 
@@ -945,7 +1153,10 @@ loadRecentFeedback();
 loadFollowups();
 loadHotspots();
 loadCapacitySummary();
+loadCapacityTrend();
 loadCapacityRecent();
+loadCapacityAlerts();
+loadCapacityStages();
 loadActionSummary();
 loadActions();
 loadDriftSummary();

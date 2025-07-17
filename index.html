@@ -26,6 +26,7 @@
           <a href="#templates">Templates</a>
           <a href="#signals">Signals</a>
           <a href="#feedback">Feedback</a>
+          <a href="#capacity">Capacity</a>
           <a href="#pulse">Pulse</a>
         </nav>
       </div>
@@ -226,79 +227,7 @@
             </div>
             <button class="primary">Run calibration session</button>
           </div>
-          <div class="drift-card">
-            <div class="drift-head">
-              <div>
-                <p class="eyebrow">Drift Watch</p>
-                <h3>Score variance log</h3>
-              </div>
-              <span class="chip">Live</span>
-            </div>
-            <form class="drift-form" id="drift-form">
-              <div class="field">
-                <label for="drift-criterion">Criterion</label>
-                <input
-                  id="drift-criterion"
-                  name="criterion"
-                  type="text"
-                  placeholder="e.g., Leadership evidence"
-                  required
-                />
-              </div>
-              <div class="field">
-                <label for="drift-spread">Score spread</label>
-                <select id="drift-spread" name="spread" required>
-                  <option value="">Select</option>
-                  <option value="1">1 point</option>
-                  <option value="2">2 points</option>
-                  <option value="3">3 points</option>
-                  <option value="4">4 points</option>
-                  <option value="5">5 points</option>
-                </select>
-              </div>
-              <div class="field">
-                <label for="drift-issue">Issue type</label>
-                <select id="drift-issue" name="issue_type" required>
-                  <option value="">Select</option>
-                  <option value="anchors">Anchor alignment</option>
-                  <option value="weighting">Weighting confusion</option>
-                  <option value="evidence">Evidence mismatch</option>
-                  <option value="consistency">Reviewer consistency</option>
-                  <option value="workflow">Workflow friction</option>
-                </select>
-              </div>
-              <div class="field">
-                <label for="drift-notes">Notes</label>
-                <textarea
-                  id="drift-notes"
-                  name="notes"
-                  rows="3"
-                  placeholder="Capture what reviewers disagreed on."
-                  required
-                ></textarea>
-              </div>
-              <button class="primary" type="submit">Log drift signal</button>
-              <p class="form-status" id="drift-form-status" role="status" aria-live="polite"></p>
-            </form>
-            <div class="drift-metrics">
-              <div>
-                <span class="metric-label">Total signals</span>
-                <strong id="drift-total">—</strong>
-              </div>
-              <div>
-                <span class="metric-label">Avg spread</span>
-                <strong id="drift-average">—</strong>
-              </div>
-              <div>
-                <span class="metric-label">High risk</span>
-                <strong id="drift-high">—</strong>
-              </div>
-            </div>
-            <ul class="drift-list" id="drift-list"></ul>
-            <p class="drift-status" id="drift-status" role="status" aria-live="polite">
-              Loading drift log.
-            </p>
-          </div>
+          
         </div>
       </section>
 
@@ -653,6 +582,148 @@
             <p class="form-status" id="feedback-status" role="status" aria-live="polite"></p>
           </form>
         </div>
+      </section>
+
+      <section id="capacity" class="section capacity">
+        <div class="section-title">
+          <h2>Reviewer load ledger</h2>
+          <p>Track workload so no reviewer gets overloaded mid-cycle.</p>
+        </div>
+        <div class="capacity-grid">
+          <form class="capacity-form" id="capacity-form">
+            <div class="field">
+              <label for="reviewer">Reviewer name</label>
+              <input id="reviewer" name="reviewer" type="text" placeholder="Reviewer name" required />
+            </div>
+            <div class="field">
+              <label for="capacity-role">Role</label>
+              <input id="capacity-role" name="role" type="text" placeholder="Panel lead, reviewer" required />
+            </div>
+            <div class="field">
+              <label for="capacity-stage">Cycle stage</label>
+              <select id="capacity-stage" name="stage" required>
+                <option value="">Select one</option>
+                <option value="prep">Prep & onboarding</option>
+                <option value="scoring">Active scoring</option>
+                <option value="decision">Decision meeting</option>
+                <option value="post">Post-cycle review</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="assignments">Applications assigned</label>
+              <input id="assignments" name="assignments" type="number" min="0" max="300" required />
+            </div>
+            <div class="field">
+              <label for="hours">Hours forecast</label>
+              <input id="hours" name="hours" type="number" min="0" max="120" step="0.5" required />
+            </div>
+            <div class="field">
+              <label for="confidence">Confidence (1-5)</label>
+              <select id="confidence" name="confidence">
+                <option value="">Select one</option>
+                <option value="1">1 - Low</option>
+                <option value="2">2</option>
+                <option value="3">3 - Steady</option>
+                <option value="4">4</option>
+                <option value="5">5 - High</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="risk">Risk level</label>
+              <select id="risk" name="risk_level" required>
+                <option value="">Select one</option>
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="capacity-notes">Notes</label>
+              <textarea
+                id="capacity-notes"
+                name="notes"
+                rows="3"
+                placeholder="Any blockers or adjustments needed."
+              ></textarea>
+            </div>
+            <button class="primary" type="submit">Log load check-in</button>
+            <p class="form-status" id="capacity-form-status" role="status" aria-live="polite"></p>
+          </form>
+          <div class="capacity-panel">
+            <article class="capacity-card">
+              <p class="eyebrow">Load snapshot</p>
+              <div class="capacity-metrics">
+                <div>
+                  <span class="metric-label">Avg assignments</span>
+                  <strong id="capacity-average">—</strong>
+                </div>
+                <div>
+                  <span class="metric-label">Hours forecast</span>
+                  <strong id="capacity-hours">—</strong>
+                </div>
+                <div>
+                  <span class="metric-label">High risk reviewers</span>
+                  <strong id="capacity-risk">—</strong>
+                </div>
+              </div>
+            </article>
+            <article class="capacity-card">
+              <p class="eyebrow">Load trendline</p>
+              <div class="trend-header">
+                <div>
+                  <span class="metric-label">Check-ins (14d)</span>
+                  <strong id="capacity-trend-total">—</strong>
+                </div>
+                <div>
+                  <span class="metric-label">Avg hours (14d)</span>
+                  <strong id="capacity-trend-hours">—</strong>
+                </div>
+                <div>
+                  <span class="metric-label">Peak day</span>
+                  <strong id="capacity-trend-peak">—</strong>
+                </div>
+              </div>
+              <ul class="trend-chart" id="capacity-trend-chart">
+                <li>Loading...</li>
+              </ul>
+              <p class="capacity-status" id="capacity-trend-status">Loading trendline.</p>
+            </article>
+            <article class="capacity-card">
+              <p class="eyebrow">Risk mix</p>
+              <ul class="capacity-list" id="capacity-risk-list">
+                <li>Loading...</li>
+              </ul>
+            </article>
+            <article class="capacity-card">
+              <p class="eyebrow">Stage hotspots</p>
+              <ul class="capacity-list" id="capacity-stage-list">
+                <li>Loading...</li>
+              </ul>
+              <p class="capacity-status" id="capacity-stage-status">
+                Loading stage coverage.
+              </p>
+            </article>
+            <article class="capacity-card">
+              <p class="eyebrow">Load alerts</p>
+              <ul class="capacity-list" id="capacity-alerts">
+                <li>Loading...</li>
+              </ul>
+              <p class="capacity-status" id="capacity-alerts-status">
+                Scanning for overload risk.
+              </p>
+            </article>
+            <article class="capacity-card">
+              <p class="eyebrow">Latest check-ins</p>
+              <ul class="capacity-recent" id="capacity-recent">
+                <li>Loading...</li>
+              </ul>
+              <p class="capacity-status" id="capacity-recent-status">
+                Loading latest check-ins.
+              </p>
+            </article>
+          </div>
+        </div>
+        <p class="capacity-status" id="capacity-status">Syncing capacity ledger.</p>
       </section>
 
       <section id="pulse" class="section pulse">

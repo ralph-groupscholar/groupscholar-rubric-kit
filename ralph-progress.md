@@ -84,3 +84,18 @@
 ## Iteration 105
 - Removed duplicate reviewer load fetchers so the ledger consistently uses the reviewer-load endpoints.
 - Cleaned up duplicate capacity loader calls to avoid double refreshes on page load.
+
+## Iteration 106
+- Added reviewer load alerts powered by a new API endpoint to flag overload risk from recent check-ins.
+- Updated the reviewer load ledger UI with a load alerts card and alert-level tags.
+- Wired client-side fetch/render logic to keep the alerts list synced after submissions.
+
+## Iteration 135
+- Added a stage hotspot card to the reviewer load ledger to highlight where check-ins cluster.
+- Built a new reviewer-load-stages API endpoint that aggregates load metrics by stage.
+- Wired the new stage coverage list into the capacity dashboard and refresh flow.
+
+## Iteration 138
+- Added a reviewer load trendline card with 14-day check-in totals, average hours, and peak day tracking.
+- Built a reviewer-load-trends API endpoint to aggregate daily load counts and average hours.
+- Wired capacity trend loading into the dashboard refresh flow and check-in submission path.
