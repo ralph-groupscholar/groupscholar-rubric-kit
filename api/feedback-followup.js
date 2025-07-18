@@ -29,7 +29,7 @@ module.exports = async function handler(req, res) {
 
   const client = new Client({
     connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false },
+    ssl: process.env.DATABASE_SSL === "true" ? { rejectUnauthorized: false } : false,
   });
 
   try {

@@ -1,12 +1,15 @@
 const { Client } = require("pg");
 
 const createTableQuery = `
-  CREATE TABLE IF NOT EXISTS rubric_calibration_drift (
+  CREATE TABLE IF NOT EXISTS rubric_drift_log (
     id BIGSERIAL PRIMARY KEY,
-    criterion TEXT NOT NULL,
-    spread INTEGER NOT NULL,
-    issue_type TEXT NOT NULL,
+    reviewer TEXT NOT NULL,
+    session_date DATE,
+    stage TEXT NOT NULL,
+    drift_type TEXT NOT NULL,
+    severity TEXT NOT NULL,
     notes TEXT NOT NULL,
+    action_needed BOOLEAN NOT NULL DEFAULT FALSE,
     source TEXT,
     user_agent TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -33,27 +36,16 @@ module.exports = async function handler(req, res) {
     await client.connect();
     await client.query(createTableQuery);
 
-    const { rows } = await client.query(
-      `
-        SELECT
-          COUNT(*)::int AS total,
-          ROUND(AVG(spread)::numeric, 1) AS average_spread,
-          COUNT(*) FILTER (WHERE spread >= 4)::int AS high_risk,
-          MAX(created_at) AS last_entry
-        FROM rubric_calibration_drift;
-      `
-    );
+    const result = await client.query(`
+      SELECT reviewer, stage, drift_type, severity, notes, action_needed, session_date, created_at
+      FROM rubric_drift_log
+      ORDER BY created_at DESC
+      LIMIT 5
+    `);
 
-    const summary = rows[0] || {};
-
-    res.status(200).json({
-      total: summary.total ?? 0,
-      average_spread: summary.average_spread ? Number(summary.average_spread) : 0,
-      high_risk: summary.high_risk ?? 0,
-      last_entry: summary.last_entry,
-    });
+    res.status(200).json({ entries: result.rows });
   } catch (error) {
-    res.status(500).json({ error: "Unable to load drift summary" });
+    res.status(500).json({ error: "Unable to load recent drift logs" });
   } finally {
     await client.end().catch(() => null);
   }

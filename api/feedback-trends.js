@@ -16,6 +16,13 @@ const createTableQuery = `
   );
 `;
 
+function mapCounts(rows) {
+  return rows.reduce((acc, row) => {
+    acc[row.key] = Number(row.count) || 0;
+    return acc;
+  }, {});
+}
+
 module.exports = async function handler(req, res) {
   if (req.method !== "GET") {
     res.status(405).json({ error: "Method not allowed" });
@@ -36,20 +43,41 @@ module.exports = async function handler(req, res) {
     await client.connect();
     await client.query(createTableQuery);
 
-    const result = await client.query(
+    const trendResult = await client.query(
       `
-        SELECT name, role, stage, focus, notes, created_at
+        SELECT DATE_TRUNC('day', created_at) AS day, COUNT(*)::int AS count
         FROM rubric_kit_feedback
-        ORDER BY created_at DESC
-        LIMIT 5
+        WHERE created_at >= NOW() - INTERVAL '13 days'
+        GROUP BY day
+        ORDER BY day ASC
+      `
+    );
+
+    const focusResult = await client.query(
+      `
+        SELECT focus AS key, COUNT(*)::int AS count
+        FROM rubric_kit_feedback
+        WHERE created_at >= NOW() - INTERVAL '6 days'
+        GROUP BY focus
+      `
+    );
+
+    const stageResult = await client.query(
+      `
+        SELECT stage AS key, COUNT(*)::int AS count
+        FROM rubric_kit_feedback
+        WHERE created_at >= NOW() - INTERVAL '6 days'
+        GROUP BY stage
       `
     );
 
     res.status(200).json({
-      entries: result.rows || [],
+      series: trendResult.rows || [],
+      focus: mapCounts(focusResult.rows || []),
+      stages: mapCounts(stageResult.rows || []),
     });
   } catch (error) {
-    res.status(500).json({ error: "Unable to load recent feedback" });
+    res.status(500).json({ error: "Unable to load trend data" });
   } finally {
     await client.end().catch(() => null);
   }

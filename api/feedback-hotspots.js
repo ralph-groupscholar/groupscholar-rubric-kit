@@ -1,12 +1,15 @@
 const { Client } = require("pg");
 
 const createTableQuery = `
-  CREATE TABLE IF NOT EXISTS rubric_calibration_drift (
+  CREATE TABLE IF NOT EXISTS rubric_kit_feedback (
     id BIGSERIAL PRIMARY KEY,
-    criterion TEXT NOT NULL,
-    spread INTEGER NOT NULL,
-    issue_type TEXT NOT NULL,
+    name TEXT NOT NULL,
+    role TEXT NOT NULL,
+    email TEXT,
+    stage TEXT NOT NULL,
+    focus TEXT NOT NULL,
     notes TEXT NOT NULL,
+    contact_ok BOOLEAN NOT NULL DEFAULT FALSE,
     source TEXT,
     user_agent TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -33,18 +36,21 @@ module.exports = async function handler(req, res) {
     await client.connect();
     await client.query(createTableQuery);
 
-    const { rows } = await client.query(
+    const result = await client.query(
       `
-        SELECT criterion, spread, issue_type, notes, created_at
-        FROM rubric_calibration_drift
-        ORDER BY created_at DESC
-        LIMIT 5;
+        SELECT stage, focus, COUNT(*)::int AS count
+        FROM rubric_kit_feedback
+        GROUP BY stage, focus
+        ORDER BY count DESC, stage, focus
+        LIMIT 8
       `
     );
 
-    res.status(200).json({ entries: rows || [] });
+    res.status(200).json({
+      entries: result.rows || [],
+    });
   } catch (error) {
-    res.status(500).json({ error: "Unable to load drift signals" });
+    res.status(500).json({ error: "Unable to load hotspot summary" });
   } finally {
     await client.end().catch(() => null);
   }

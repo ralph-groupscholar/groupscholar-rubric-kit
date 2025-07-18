@@ -1,15 +1,16 @@
 const { Client } = require("pg");
 
 const createTableQuery = `
-  CREATE TABLE IF NOT EXISTS rubric_kit_feedback (
+  CREATE TABLE IF NOT EXISTS rubric_kit_capacity (
     id BIGSERIAL PRIMARY KEY,
-    name TEXT NOT NULL,
+    reviewer TEXT NOT NULL,
     role TEXT NOT NULL,
-    email TEXT,
     stage TEXT NOT NULL,
-    focus TEXT NOT NULL,
-    notes TEXT NOT NULL,
-    contact_ok BOOLEAN NOT NULL DEFAULT FALSE,
+    assignments INT NOT NULL,
+    hours NUMERIC(6,2) NOT NULL,
+    confidence INT,
+    risk_level TEXT NOT NULL,
+    notes TEXT,
     source TEXT,
     user_agent TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -47,52 +48,40 @@ module.exports = async function handler(req, res) {
       `
         SELECT
           COUNT(*)::int AS total,
-          COUNT(*) FILTER (WHERE contact_ok)::int AS followup,
-          MAX(created_at) AS last_submission
-        FROM rubric_kit_feedback
+          AVG(assignments)::numeric(10,1) AS avg_assignments,
+          AVG(hours)::numeric(10,1) AS avg_hours,
+          SUM(CASE WHEN risk_level = 'high' THEN 1 ELSE 0 END)::int AS high_risk,
+          MAX(created_at) AS last_entry
+        FROM rubric_kit_capacity
       `
     );
 
-    const stageResult = await client.query(
+    const riskResult = await client.query(
       `
-        SELECT stage AS key, COUNT(*)::int AS count
-        FROM rubric_kit_feedback
-        GROUP BY stage
-      `
-    );
-
-    const focusResult = await client.query(
-      `
-        SELECT focus AS key, COUNT(*)::int AS count
-        FROM rubric_kit_feedback
-        GROUP BY focus
-      `
-    );
-
-    const roleResult = await client.query(
-      `
-        SELECT role AS key, COUNT(*)::int AS count
-        FROM rubric_kit_feedback
-        GROUP BY role
+        SELECT risk_level AS key, COUNT(*)::int AS count
+        FROM rubric_kit_capacity
+        GROUP BY risk_level
       `
     );
 
     const totals = totalsResult.rows[0] || {
       total: 0,
-      followup: 0,
-      last_submission: null,
+      avg_assignments: null,
+      avg_hours: null,
+      high_risk: 0,
+      last_entry: null,
     };
 
     res.status(200).json({
       total: Number(totals.total) || 0,
-      followup: Number(totals.followup) || 0,
-      last_submission: totals.last_submission,
-      stages: mapCounts(stageResult.rows || []),
-      focus: mapCounts(focusResult.rows || []),
-      roles: mapCounts(roleResult.rows || []),
+      avg_assignments: totals.avg_assignments,
+      avg_hours: totals.avg_hours,
+      high_risk: Number(totals.high_risk) || 0,
+      last_entry: totals.last_entry,
+      risk_levels: mapCounts(riskResult.rows || []),
     });
   } catch (error) {
-    res.status(500).json({ error: "Unable to load feedback summary" });
+    res.status(500).json({ error: "Unable to load capacity summary" });
   } finally {
     await client.end().catch(() => null);
   }

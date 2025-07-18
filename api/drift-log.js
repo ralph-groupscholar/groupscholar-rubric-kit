@@ -1,27 +1,26 @@
 const { Client } = require("pg");
 
-const REQUIRED_FIELDS = ["criterion", "spread", "issue_type", "notes"];
+const REQUIRED_FIELDS = ["reviewer", "stage", "drift_type", "severity", "notes"];
 const MAX_LENGTHS = {
-  criterion: 160,
-  issue_type: 60,
-  notes: 1400,
+  reviewer: 120,
+  stage: 60,
+  drift_type: 80,
+  severity: 20,
+  notes: 2000,
 };
 
-const ALLOWED_ISSUES = new Set([
-  "anchors",
-  "weighting",
-  "evidence",
-  "consistency",
-  "workflow",
-]);
+const ALLOWED_SEVERITY = new Set(["low", "medium", "high"]);
 
 const createTableQuery = `
-  CREATE TABLE IF NOT EXISTS rubric_calibration_drift (
+  CREATE TABLE IF NOT EXISTS rubric_drift_log (
     id BIGSERIAL PRIMARY KEY,
-    criterion TEXT NOT NULL,
-    spread INTEGER NOT NULL,
-    issue_type TEXT NOT NULL,
+    reviewer TEXT NOT NULL,
+    session_date DATE,
+    stage TEXT NOT NULL,
+    drift_type TEXT NOT NULL,
+    severity TEXT NOT NULL,
     notes TEXT NOT NULL,
+    action_needed BOOLEAN NOT NULL DEFAULT FALSE,
     source TEXT,
     user_agent TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -54,11 +53,14 @@ function clamp(value, max) {
   return value.length > max ? value.slice(0, max) : value;
 }
 
-function normalizeSpread(value) {
-  const parsed = Number.parseInt(value, 10);
-  if (Number.isNaN(parsed)) return null;
-  if (parsed < 1 || parsed > 5) return null;
-  return parsed;
+function normalizeDate(value) {
+  if (!value) return null;
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const parsed = new Date(trimmed);
+  if (Number.isNaN(parsed.getTime())) return null;
+  return parsed.toISOString().split("T")[0];
 }
 
 module.exports = async function handler(req, res) {
@@ -82,10 +84,13 @@ module.exports = async function handler(req, res) {
   }
 
   const cleaned = {
-    criterion: clamp(normalize(payload.criterion), MAX_LENGTHS.criterion),
-    spread: normalizeSpread(payload.spread),
-    issue_type: clamp(normalize(payload.issue_type), MAX_LENGTHS.issue_type),
+    reviewer: clamp(normalize(payload.reviewer), MAX_LENGTHS.reviewer),
+    stage: clamp(normalize(payload.stage), MAX_LENGTHS.stage),
+    drift_type: clamp(normalize(payload.drift_type), MAX_LENGTHS.drift_type),
+    severity: clamp(normalize(payload.severity), MAX_LENGTHS.severity),
     notes: clamp(normalize(payload.notes), MAX_LENGTHS.notes),
+    session_date: normalizeDate(payload.session_date),
+    action_needed: Boolean(payload.action_needed),
   };
 
   const missing = REQUIRED_FIELDS.filter((field) => !cleaned[field]);
@@ -94,8 +99,8 @@ module.exports = async function handler(req, res) {
     return;
   }
 
-  if (!ALLOWED_ISSUES.has(cleaned.issue_type)) {
-    res.status(400).json({ error: "Invalid issue type" });
+  if (!ALLOWED_SEVERITY.has(cleaned.severity)) {
+    res.status(400).json({ error: "Invalid severity" });
     return;
   }
 
@@ -109,16 +114,19 @@ module.exports = async function handler(req, res) {
     await client.query(createTableQuery);
     await client.query(
       `
-        INSERT INTO rubric_calibration_drift
-          (criterion, spread, issue_type, notes, source, user_agent)
+        INSERT INTO rubric_drift_log
+          (reviewer, session_date, stage, drift_type, severity, notes, action_needed, source, user_agent)
         VALUES
-          ($1, $2, $3, $4, $5, $6)
+          ($1, $2, $3, $4, $5, $6, $7, $8, $9)
       `,
       [
-        cleaned.criterion,
-        cleaned.spread,
-        cleaned.issue_type,
+        cleaned.reviewer,
+        cleaned.session_date,
+        cleaned.stage,
+        cleaned.drift_type,
+        cleaned.severity,
         cleaned.notes,
+        cleaned.action_needed,
         "rubric-kit",
         req.headers["user-agent"] || null,
       ]
@@ -126,7 +134,7 @@ module.exports = async function handler(req, res) {
 
     res.status(200).json({ ok: true });
   } catch (error) {
-    res.status(500).json({ error: "Unable to store drift signal" });
+    res.status(500).json({ error: "Unable to store drift log" });
   } finally {
     await client.end().catch(() => null);
   }

@@ -1,15 +1,16 @@
 const { Client } = require("pg");
 
 const createTableQuery = `
-  CREATE TABLE IF NOT EXISTS rubric_kit_feedback (
+  CREATE TABLE IF NOT EXISTS rubric_kit_capacity (
     id BIGSERIAL PRIMARY KEY,
-    name TEXT NOT NULL,
+    reviewer TEXT NOT NULL,
     role TEXT NOT NULL,
-    email TEXT,
     stage TEXT NOT NULL,
-    focus TEXT NOT NULL,
-    notes TEXT NOT NULL,
-    contact_ok BOOLEAN NOT NULL DEFAULT FALSE,
+    assignments INT NOT NULL,
+    hours NUMERIC(6,2) NOT NULL,
+    confidence INT,
+    risk_level TEXT NOT NULL,
+    notes TEXT,
     source TEXT,
     user_agent TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -38,18 +39,16 @@ module.exports = async function handler(req, res) {
 
     const result = await client.query(
       `
-        SELECT name, role, stage, focus, notes, created_at
-        FROM rubric_kit_feedback
+        SELECT reviewer, role, stage, assignments, hours, confidence, risk_level, notes, created_at
+        FROM rubric_kit_capacity
         ORDER BY created_at DESC
         LIMIT 5
       `
     );
 
-    res.status(200).json({
-      entries: result.rows || [],
-    });
+    res.status(200).json({ entries: result.rows || [] });
   } catch (error) {
-    res.status(500).json({ error: "Unable to load recent feedback" });
+    res.status(500).json({ error: "Unable to load recent capacity check-ins" });
   } finally {
     await client.end().catch(() => null);
   }
